@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 export default function AdminPanel() {
   const [data, setData] = useState([]);
@@ -63,7 +64,7 @@ export default function AdminPanel() {
             : item
         ));
       }
-    } catch (err) {
+    } catch {
       alert("Lỗi khi cập nhật dữ liệu!");
     }
     
@@ -111,6 +112,49 @@ export default function AdminPanel() {
   return (
     <div style={{ maxWidth: 1200, margin: "40px auto", padding: "0 20px" }}>
       <h2>Admin Control Panel</h2>
+      
+      {/* Quick Links */}
+      <div style={{ 
+        marginBottom: 20, 
+        padding: "15px", 
+        background: "#f8f9fa", 
+        borderRadius: "8px",
+        border: "1px solid #e9ecef"
+      }}>
+        <h3 style={{ margin: "0 0 10px 0", color: "#495057" }}>🔗 Liên kết nhanh</h3>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <Link 
+            to="/admin-feedback"
+            style={{
+              display: "inline-block",
+              padding: "8px 16px",
+              background: "#007bff",
+              color: "white",
+              textDecoration: "none",
+              borderRadius: "5px",
+              fontSize: "14px",
+              fontWeight: "bold"
+            }}
+          >
+            📊 Quản lý phản hồi
+          </Link>
+          <Link 
+            to="/report"
+            style={{
+              display: "inline-block",
+              padding: "8px 16px",
+              background: "#28a745",
+              color: "white",
+              textDecoration: "none",
+              borderRadius: "5px",
+              fontSize: "14px",
+              fontWeight: "bold"
+            }}
+          >
+            📝 Trang báo cáo
+          </Link>
+        </div>
+      </div>
       
       {/* Controls */}
       <div style={{ marginBottom: 20, display: "flex", gap: 10, alignItems: "center" }}>

@@ -45,35 +45,48 @@ export const deleteSoftware = async (req, res) => {
   }
 };
 
-// 🔹 Cập nhật phần mềm
-export const updateSoftware = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updated = await Software.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
-    res.json(updated);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 // 🔹 Lưu cấu hình cột
 export const saveColumnConfig = async (req, res) => {
   try {
     const { category, columns } = req.body;
 
-    // Lưu cấu hình cột vào một collection riêng hoặc vào metadata
-    // Ở đây tôi sẽ tạo một cách đơn giản bằng cách lưu vào một field đặc biệt
+    console.log(`Saving column config for ${category}:`, columns);
+
+    // Tìm và cập nhật hoặc tạo mới cấu hình cột
     const config = await Software.findOneAndUpdate(
       { category, type: 'column_config' },
-      { category, columns, type: 'column_config' },
-      { upsert: true, new: true }
+      {
+        category,
+        columns,
+        type: 'column_config',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true
+      }
     );
 
-    res.json({ message: "Column configuration saved", config });
+    console.log(`✅ Successfully saved column config for ${category}:`, config);
+    res.json({
+      success: true,
+      message: "Column configuration saved successfully",
+      config: {
+        category: config.category,
+        columns: config.columns,
+        updatedAt: config.updatedAt
+      }
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("❌ Error saving column config:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      error: error.toString()
+    });
   }
 };
 
@@ -83,8 +96,9 @@ export const getColumnConfig = async (req, res) => {
     const { category } = req.params;
     const config = await Software.findOne({ category, type: 'column_config' });
 
-    if (config) {
-      res.json(config.columns || []);
+    if (config && config.columns) {
+      console.log(`Loaded column config for ${category}:`, config.columns);
+      res.json(config.columns);
     } else {
       // Trả về cấu hình mặc định
       const defaultColumns = {
@@ -120,9 +134,11 @@ export const getColumnConfig = async (req, res) => {
         ]
       };
 
+      console.log(`Using default columns for ${category}`);
       res.json(defaultColumns[category] || []);
     }
   } catch (error) {
+    console.error("Error loading column config:", error);
     res.status(500).json({ message: error.message });
   }
 };

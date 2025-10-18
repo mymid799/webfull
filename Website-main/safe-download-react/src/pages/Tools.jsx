@@ -23,12 +23,17 @@ export default function Tools() {
       .then((res) => setData(res))
       .catch(() => setData([]));
 
-    // Load cấu hình cột
-    fetch("http://localhost:5000/api/admin/columns/tools")
-      .then((res) => res.json())
-      .then((res) => setColumns(res))
-      .catch(() => {
-        // Fallback to default columns if API fails
+    // Load cấu hình cột từ localStorage
+    try {
+      const configKey = `column_config_tools`;
+      const savedConfig = localStorage.getItem(configKey);
+      
+      if (savedConfig) {
+        const configData = JSON.parse(savedConfig);
+        console.log("✅ Loaded column config from localStorage:", configData);
+        setColumns(configData.columns);
+      } else {
+        console.log("📋 No saved config found, using defaults");
         setColumns([
           { key: "toolName", label: "Tên Tool", type: "text" },
           { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
@@ -36,7 +41,17 @@ export default function Tools() {
           { key: "ownCloud", label: "OwnCloud", type: "url" },
           { key: "note", label: "Note", type: "text" }
         ]);
-      });
+      }
+    } catch (err) {
+      console.warn("⚠️ Error loading column config, using defaults:", err);
+      setColumns([
+        { key: "toolName", label: "Tên Tool", type: "text" },
+        { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
+        { key: "googleDrive", label: "Google Drive", type: "url" },
+        { key: "ownCloud", label: "OwnCloud", type: "url" },
+        { key: "note", label: "Note", type: "text" }
+      ]);
+    }
 
     const token = localStorage.getItem("token");
     if (token) setIsAdmin(true);

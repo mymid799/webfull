@@ -22,12 +22,17 @@ export default function Office() {
       .then((res) => setData(res))
       .catch(() => setData([]));
 
-    // Load cấu hình cột
-    fetch("http://localhost:5000/api/admin/columns/office")
-      .then((res) => res.json())
-      .then((res) => setColumns(res))
-      .catch(() => {
-        // Fallback to default columns if API fails
+    // Load cấu hình cột từ localStorage
+    try {
+      const configKey = `column_config_office`;
+      const savedConfig = localStorage.getItem(configKey);
+      
+      if (savedConfig) {
+        const configData = JSON.parse(savedConfig);
+        console.log("✅ Loaded column config from localStorage:", configData);
+        setColumns(configData.columns);
+      } else {
+        console.log("📋 No saved config found, using defaults");
         setColumns([
           { key: "version", label: "Version", type: "text" },
           { key: "edition", label: "Edition", type: "text" },
@@ -36,10 +41,20 @@ export default function Office() {
           { key: "oneDrive", label: "OneDrive", type: "url" },
           { key: "sha1", label: "SHA-1", type: "text" }
         ]);
-      });
+      }
+    } catch (err) {
+      console.warn("⚠️ Error loading column config, using defaults:", err);
+      setColumns([
+        { key: "version", label: "Version", type: "text" },
+        { key: "edition", label: "Edition", type: "text" },
+        { key: "fshare", label: "Fshare", type: "url" },
+        { key: "drive", label: "Google Drive", type: "url" },
+        { key: "oneDrive", label: "OneDrive", type: "url" },
+        { key: "sha1", label: "SHA-1", type: "text" }
+      ]);
+    }
 
-    const token = localStorage.getItem("token");
-    if (token) setIsAdmin(true);
+    if (localStorage.getItem("token")) setIsAdmin(true);
   }, []);
 
   const addRow = () => {
@@ -94,7 +109,7 @@ export default function Office() {
       const result = await res.json();
       if (res.ok) alert(result.message || "✅ Dữ liệu đã lưu!");
       else alert(result.message || "❌ Lưu thất bại!");
-    } catch (err) {
+    } catch {
       alert("⚠️ Lỗi khi gửi dữ liệu!");
     }
   };

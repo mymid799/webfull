@@ -26,18 +26,28 @@ export default function ColumnManager({
     const updatedColumns = [...columns, newColumn];
     setColumns(updatedColumns);
     
-    // Lưu cấu hình cột vào backend
+    // Cập nhật dữ liệu với cột mới (thêm field rỗng cho tất cả record)
+    const updatedData = data.map(item => ({
+      ...item,
+      [newKey]: "" // Thêm field mới với giá trị rỗng
+    }));
+    setData(updatedData);
+    
+    // Lưu cấu hình cột vào localStorage
     try {
-      await fetch("http://localhost:5000/api/admin/columns/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          category, 
-          columns: updatedColumns 
-        }),
-      });
+      const configKey = `column_config_${category}`;
+      const configData = {
+        category,
+        columns: updatedColumns,
+        updatedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem(configKey, JSON.stringify(configData));
+      console.log("✅ Cấu hình cột đã được lưu vào localStorage:", configData);
+      alert("✅ Cột mới đã được thêm! Nhớ bấm 'Lưu' để lưu vào database.");
     } catch (err) {
-      console.error("Lỗi khi lưu cấu hình cột:", err);
+      console.error("❌ Lỗi khi lưu cấu hình cột:", err);
+      alert(`❌ Lỗi khi lưu cấu hình cột: ${err.message}`);
     }
     
     setNewColumnName("");
@@ -46,7 +56,7 @@ export default function ColumnManager({
   };
 
   // Xóa cột
-  const deleteColumn = async (columnKey) => {
+  const _deleteColumn = async (columnKey) => {
     if (columns.length <= 1) {
       alert("Không thể xóa cột cuối cùng!");
       return;
@@ -62,18 +72,21 @@ export default function ColumnManager({
     });
     setData(updatedData);
     
-    // Lưu cấu hình cột vào backend
+    // Lưu cấu hình cột vào localStorage (temporary solution)
     try {
-      await fetch("http://localhost:5000/api/admin/columns/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          category, 
-          columns: updatedColumns 
-        }),
-      });
+      const configKey = `column_config_${category}`;
+      const configData = {
+        category,
+        columns: updatedColumns,
+        updatedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem(configKey, JSON.stringify(configData));
+      console.log("✅ Cấu hình cột đã được cập nhật trong localStorage:", configData);
+      alert("✅ Cột đã được xóa và cấu hình đã được lưu!");
     } catch (err) {
-      console.error("Lỗi khi lưu cấu hình cột:", err);
+      console.error("❌ Lỗi khi lưu cấu hình cột:", err);
+      alert(`❌ Lỗi khi lưu cấu hình cột: ${err.message}`);
     }
   };
 

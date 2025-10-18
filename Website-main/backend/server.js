@@ -9,6 +9,7 @@ import windowsRoutes from "./routes/windowsRoutes.js";
 import officeRoutes from "./routes/officeRoutes.js";
 import toolsRoutes from "./routes/toolsRoutes.js";
 import antivirusRoutes from "./routes/antivirusRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use("/api/windows", windowsRoutes);
 app.use("/api/office", officeRoutes);
 app.use("/api/tools", toolsRoutes);
 app.use("/api/antivirus", antivirusRoutes);
+app.use("/api/reports", reportRoutes);
 
 // ⚙️ Kết nối MongoDB
 mongoose

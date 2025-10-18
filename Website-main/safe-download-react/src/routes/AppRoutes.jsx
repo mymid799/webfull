@@ -5,6 +5,9 @@ import Windows from "../pages/Windows";
 import Office from "../pages/Office";
 import Tools from "../pages/Tools";
 import FreeAntivirus from "../pages/FreeAntivirus";
+import Report from "../pages/Report";
+import AdminFeedback from "../pages/AdminFeedback";
+import FeedbackStatus from "../pages/FeedbackStatus";
 
 export default function AppRoutes() {
   return (
@@ -14,6 +17,9 @@ export default function AppRoutes() {
       <Route path="/office" element={<Office />} />
       <Route path="/tools" element={<Tools />} />
       <Route path="/free-antivirus" element={<FreeAntivirus />} />
+      <Route path="/report" element={<Report />} />
+      <Route path="/admin-feedback" element={<AdminFeedback />} />
+      <Route path="/feedback-status" element={<FeedbackStatus />} />
     </Routes>
   );
 }

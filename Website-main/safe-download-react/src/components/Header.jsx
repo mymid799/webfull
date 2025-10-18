@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FiSettings, FiLogOut, FiKey } from "react-icons/fi";
 
 export default function Header() {
-  const location = useLocation();
   const navigate = useNavigate();
 
   const [showLogin, setShowLogin] = useState(false);
@@ -18,13 +17,6 @@ export default function Header() {
   const [loginMessage, setLoginMessage] = useState("");
   const [loginMessageType, setLoginMessageType] = useState(""); // "success" hoặc "error"
 
-  const tabs = [
-    { id: "/", label: "Home" },
-    { id: "/windows", label: "Windows" },
-    { id: "/office", label: "Office" },
-    { id: "/tools", label: "Tools" },
-    { id: "/free-antivirus", label: "Free Antivirus / An toàn thông tin" },
-  ];
 
   // ✅ Kiểm tra token khi load lại trang
   useEffect(() => {
@@ -62,7 +54,7 @@ export default function Header() {
         setLoginMessage("❌ Sai tài khoản hoặc mật khẩu!");
         setLoginMessageType("error");
       }
-    } catch (err) {
+    } catch {
       setLoginMessage("⚠️ Lỗi kết nối máy chủ!");
       setLoginMessageType("error");
     }
@@ -79,14 +71,43 @@ export default function Header() {
   // 🔑 Đổi mật khẩu
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    
+
+    // Kiểm tra mật khẩu mới và xác nhận có khớp không
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       alert("❌ Mật khẩu mới và xác nhận mật khẩu không khớp!");
       return;
     }
 
-    if (passwordForm.newPassword.length < 6) {
-      alert("❌ Mật khẩu mới phải có ít nhất 6 ký tự!");
+    // Kiểm tra độ dài mật khẩu (ít nhất 8 ký tự)
+    if (passwordForm.newPassword.length < 8) {
+      alert("❌ Mật khẩu mới phải có ít nhất 8 ký tự!");
+      return;
+    }
+
+    // Kiểm tra các tiêu chí bảo mật
+    const password = passwordForm.newPassword;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
+
+    if (!hasUpperCase) {
+      alert("❌ Mật khẩu phải có ít nhất 1 chữ cái HOA!");
+      return;
+    }
+
+    if (!hasLowerCase) {
+      alert("❌ Mật khẩu phải có ít nhất 1 chữ cái thường!");
+      return;
+    }
+
+    if (!hasNumbers) {
+      alert("❌ Mật khẩu phải có ít nhất 1 chữ số!");
+      return;
+    }
+
+    if (!hasSpecialChar) {
+      alert("❌ Mật khẩu phải có ít nhất 1 ký tự đặc biệt!");
       return;
     }
 
@@ -113,7 +134,7 @@ export default function Header() {
       } else {
         alert(`❌ ${data.message || "Đổi mật khẩu thất bại!"}`);
       }
-    } catch (err) {
+    } catch {
       alert("⚠️ Lỗi kết nối máy chủ!");
     }
   };
@@ -231,43 +252,6 @@ export default function Header() {
             </div>
           </div>
 
-          <nav
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: 18,
-              marginTop: 15,
-              flexWrap: "wrap",
-            }}
-          >
-            {tabs.map((t) => (
-              <Link
-                key={t.id}
-                to={t.id}
-                style={{
-                  padding: "8px 20px",
-                  borderRadius: 999,
-                  border:
-                    location.pathname === t.id
-                      ? "2px solid #b84e00"
-                      : "1px solid #e5e7eb",
-                  background:
-                    location.pathname === t.id ? "#fff8e1" : "#fffaf0",
-                  color: "#222",
-                  textDecoration: "none",
-                  fontWeight: 600,
-                  fontSize: 15,
-                  boxShadow:
-                    location.pathname === t.id
-                      ? "inset 0 0 4px rgba(0,0,0,0.2)"
-                      : "none",
-                  transition: "all 0.25s ease",
-                }}
-              >
-                {t.label}
-              </Link>
-            ))}
-          </nav>
         </div>
       </header>
 
@@ -409,6 +393,25 @@ export default function Header() {
             <h3 style={{ textAlign: "center", marginBottom: 15 }}>
               🔑 Đổi mật khẩu
             </h3>
+            
+            {/* Tiêu chí bảo mật */}
+            <div style={{ 
+              background: "#f8f9fa", 
+              padding: 12, 
+              borderRadius: 6, 
+              marginBottom: 15,
+              fontSize: 12,
+              color: "#6c757d"
+            }}>
+              <strong>📋 Tiêu chí mật khẩu bảo mật:</strong>
+              <ul style={{ margin: "8px 0 0 0", paddingLeft: 16 }}>
+                <li>✅ Ít nhất 8 ký tự</li>
+                <li>✅ Có chữ cái HOA (A-Z)</li>
+                <li>✅ Có chữ cái thường (a-z)</li>
+                <li>✅ Có chữ số (0-9)</li>
+                <li>✅ Có ký tự đặc biệt (!@#$%^&*)</li>
+              </ul>
+            </div>
             <input
               type="password"
               placeholder="Mật khẩu hiện tại"

@@ -44,6 +44,47 @@ export const changePassword = async (req, res) => {
       return res.status(401).json({ message: "Token required" });
     }
 
+    // Kiểm tra các tiêu chí bảo mật mật khẩu
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        message: "Mật khẩu phải có ít nhất 8 ký tự!",
+        code: "PASSWORD_TOO_SHORT"
+      });
+    }
+
+    const hasUpperCase = /[A-Z]/.test(newPassword);
+    const hasLowerCase = /[a-z]/.test(newPassword);
+    const hasNumbers = /\d/.test(newPassword);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword);
+
+    if (!hasUpperCase) {
+      return res.status(400).json({
+        message: "Mật khẩu phải có ít nhất 1 chữ cái HOA!",
+        code: "NO_UPPERCASE"
+      });
+    }
+
+    if (!hasLowerCase) {
+      return res.status(400).json({
+        message: "Mật khẩu phải có ít nhất 1 chữ cái thường!",
+        code: "NO_LOWERCASE"
+      });
+    }
+
+    if (!hasNumbers) {
+      return res.status(400).json({
+        message: "Mật khẩu phải có ít nhất 1 chữ số!",
+        code: "NO_NUMBERS"
+      });
+    }
+
+    if (!hasSpecialChar) {
+      return res.status(400).json({
+        message: "Mật khẩu phải có ít nhất 1 ký tự đặc biệt!",
+        code: "NO_SPECIAL_CHAR"
+      });
+    }
+
     // Verify token
     const decoded = jwt.verify(token, SECRET_KEY);
     const user = await User.findById(decoded.id);

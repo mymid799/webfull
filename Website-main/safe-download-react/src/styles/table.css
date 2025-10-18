@@ -7,6 +7,7 @@
   overflow: hidden;
   background: white;
   margin: 20px 0;
+  border: 2px solid #cbd5e0;
 }
 
 .enhanced-table thead {
@@ -18,7 +19,8 @@
   text-align: left;
   font-weight: 700;
   color: #1a202c;
-  border-bottom: 3px solid #d69e2e;
+  border-bottom: 3px solid #b8860b;
+  border-right: 2px solid #d69e2e;
   position: relative;
   font-size: 14px;
   text-transform: uppercase;
@@ -26,7 +28,7 @@
 }
 
 .enhanced-table tbody tr {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 2px solid #cbd5e0;
   transition: all 0.2s ease;
 }
 
@@ -46,13 +48,17 @@
 
 .enhanced-table td {
   padding: 12px;
-  border-right: 1px solid #e2e8f0;
+  border-right: 2px solid #cbd5e0;
   vertical-align: top;
   font-size: 14px;
   line-height: 1.5;
 }
 
 .enhanced-table td:last-child {
+  border-right: none;
+}
+
+.enhanced-table thead th:last-child {
   border-right: none;
 }
 
