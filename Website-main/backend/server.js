@@ -1,0 +1,38 @@
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import cors from "cors";
+
+// 🧩 Import routes
+import authRoutes from "./routes/authRoutes.js";
+import windowsRoutes from "./routes/windowsRoutes.js";
+import officeRoutes from "./routes/officeRoutes.js";
+import toolsRoutes from "./routes/toolsRoutes.js";
+import antivirusRoutes from "./routes/antivirusRoutes.js";
+
+dotenv.config();
+
+// ✅ PHẢI TẠO app TRƯỚC khi dùng app.use()
+const app = express();
+
+// 🔧 Middleware
+app.use(cors());
+app.use(express.json());
+
+// 🛣️ Gắn route
+app.use("/api/auth", authRoutes);
+app.use("/api/windows", windowsRoutes);
+app.use("/api/office", officeRoutes);
+app.use("/api/tools", toolsRoutes);
+app.use("/api/antivirus", antivirusRoutes);
+
+// ⚙️ Kết nối MongoDB
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ Connected to MongoDB Atlas");
+    app.listen(process.env.PORT || 5000, () =>
+      console.log(`🚀 Server running on port ${process.env.PORT || 5000}`)
+    );
+  })
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
