@@ -112,3 +112,47 @@ export const changePassword = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Verify admin status
+export const verifyAdmin = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({
+        isAdmin: false,
+        message: "Token required"
+      });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, SECRET_KEY);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({
+        isAdmin: false,
+        message: "User not found"
+      });
+    }
+
+    // Nếu user tồn tại trong database thì là admin
+    res.json({
+      isAdmin: true,
+      message: "Admin verified",
+      username: user.username
+    });
+
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        isAdmin: false,
+        message: "Invalid token"
+      });
+    }
+    res.status(500).json({
+      isAdmin: false,
+      error: err.message
+    });
+  }
+};

@@ -8,6 +8,7 @@ import FreeAntivirus from "../pages/FreeAntivirus";
 import Report from "../pages/Report";
 import AdminFeedback from "../pages/AdminFeedback";
 import FeedbackStatus from "../pages/FeedbackStatus";
+import VirusTotalScan from "../pages/VirusTotalScan";
 
 export default function AppRoutes() {
   return (
@@ -20,6 +21,7 @@ export default function AppRoutes() {
       <Route path="/report" element={<Report />} />
       <Route path="/admin-feedback" element={<AdminFeedback />} />
       <Route path="/feedback-status" element={<FeedbackStatus />} />
+      <Route path="/virustotal-scan" element={<VirusTotalScan />} />
     </Routes>
   );
 }

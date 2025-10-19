@@ -10,6 +10,7 @@ export default function Navigation() {
     { path: "/office", label: "📄 Office", icon: "📄" },
     { path: "/tools", label: "🛠️ Tools", icon: "🛠️" },
     { path: "/free-antivirus", label: "🛡️ Antivirus", icon: "🛡️" },
+    { path: "/virustotal-scan", label: "🔍 Quét Link", icon: "🔍" },
     { path: "/report", label: "📝 Báo cáo", icon: "📝" },
     { path: "/feedback-status", label: "📊 Phản hồi", icon: "📊" }
   ];

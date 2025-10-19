@@ -12,6 +12,7 @@ import toolsRoutes from "./routes/toolsRoutes.js";
 import antivirusRoutes from "./routes/antivirusRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import adminInfoRoutes from "./routes/adminInfoRoutes.js";
+import virustotalRoutes from "./routes/virustotalRoutes.js";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use("/api/tools", toolsRoutes);
 app.use("/api/antivirus", antivirusRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/admin-info", adminInfoRoutes);
+app.use("/api/virustotal", virustotalRoutes);
 
 // ⚙️ Kết nối MongoDB
 mongoose

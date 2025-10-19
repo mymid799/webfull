@@ -153,6 +153,21 @@ export default function AdminPanel() {
           >
             📝 Trang báo cáo
           </Link>
+          <Link 
+            to="/virustotal-scan"
+            style={{
+              display: "inline-block",
+              padding: "8px 16px",
+              background: "#dc3545",
+              color: "white",
+              textDecoration: "none",
+              borderRadius: "5px",
+              fontSize: "14px",
+              fontWeight: "bold"
+            }}
+          >
+            🔍 Quét Link VirusTotal
+          </Link>
         </div>
       </div>
       

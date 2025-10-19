@@ -288,45 +288,51 @@ const LinkCell = ({ isAdmin, row, idx, type, handleChange }) => {
         </div>
 
         {/* radio chọn hiển thị */}
-        <div style={{ fontSize: 13 }}>
-          <label>
+        <div style={{ 
+          fontSize: 13, 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: 4,
+          marginTop: 4
+        }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <input
               type="radio"
               name={`${prefix}Show-${idx}`}
               value="32"
               checked={show === "32"}
               onChange={() => handleChange(idx, showKey, "32")}
-            />{" "}
+            />
             Hiển 32-bit
           </label>
-          <label style={{ marginLeft: 10 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <input
               type="radio"
               name={`${prefix}Show-${idx}`}
               value="64"
               checked={show === "64"}
               onChange={() => handleChange(idx, showKey, "64")}
-            />{" "}
+            />
             Hiển 64-bit
           </label>
-          <label style={{ marginLeft: 10 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <input
               type="radio"
               name={`${prefix}Show-${idx}`}
               value="both"
               checked={show === "both"}
               onChange={() => handleChange(idx, showKey, "both")}
-            />{" "}
+            />
             Hiển cả hai
           </label>
-          <label style={{ marginLeft: 10 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <input
               type="radio"
               name={`${prefix}Show-${idx}`}
               value="none"
               checked={show === "none"}
               onChange={() => handleChange(idx, showKey, "none")}
-            />{" "}
+            />
             Ẩn
           </label>
         </div>
