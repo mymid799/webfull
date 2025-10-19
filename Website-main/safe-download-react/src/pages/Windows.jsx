@@ -338,21 +338,13 @@ const LinkCell = ({ isAdmin, row, idx, type, handleChange }) => {
   if (show === "32" && link32)
     return (
       <a href={link32} target="_blank" rel="noreferrer">
-        {prefix === "fshare"
-          ? "Fshare (32-bit)"
-          : prefix === "drive"
-          ? "Google Drive (32-bit)"
-          : "OneDrive (32-bit)"}
+        32-bit
       </a>
     );
   if (show === "64" && link64)
     return (
       <a href={link64} target="_blank" rel="noreferrer">
-        {prefix === "fshare"
-          ? "Fshare (64-bit)"
-          : prefix === "drive"
-          ? "Google Drive (64-bit)"
-          : "OneDrive (64-bit)"}
+        64-bit
       </a>
     );
   if (show === "both")
@@ -360,20 +352,12 @@ const LinkCell = ({ isAdmin, row, idx, type, handleChange }) => {
       <div style={{ display: "flex", flexDirection: "column" }}>
         {link32 && (
           <a href={link32} target="_blank" rel="noreferrer">
-            {prefix === "fshare"
-              ? "Fshare (32-bit)"
-              : prefix === "drive"
-              ? "Google Drive (32-bit)"
-              : "OneDrive (32-bit)"}
+            32-bit
           </a>
         )}
         {link64 && (
           <a href={link64} target="_blank" rel="noreferrer">
-            {prefix === "fshare"
-              ? "Fshare (64-bit)"
-              : prefix === "drive"
-              ? "Google Drive (64-bit)"
-              : "OneDrive (64-bit)"}
+            64-bit
           </a>
         )}
       </div>
