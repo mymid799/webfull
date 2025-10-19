@@ -23,6 +23,21 @@ export default function AdminFeedback() {
   useEffect(() => {
     loadReports();
     loadStats();
+    
+    // Check if there's a specific report ID in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const reportId = urlParams.get('id');
+    if (reportId) {
+      // Scroll to the specific report or highlight it
+      setTimeout(() => {
+        const reportElement = document.querySelector(`[data-report-id="${reportId}"]`);
+        if (reportElement) {
+          reportElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          reportElement.style.backgroundColor = '#fff3cd';
+          reportElement.style.border = '2px solid #ffc107';
+        }
+      }, 1000);
+    }
   }, []);
 
   const loadReports = async () => {
@@ -49,6 +64,22 @@ export default function AdminFeedback() {
       setStats(data);
     } catch (error) {
       console.error("Error loading stats:", error);
+    }
+  };
+
+  const loadSingleReport = async (reportId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error loading single report:", error);
+      return null;
     }
   };
 
@@ -528,7 +559,7 @@ export default function AdminFeedback() {
           </thead>
           <tbody>
             {filteredReports.map((report) => (
-              <tr key={report._id}>
+              <tr key={report._id} data-report-id={report._id}>
                 <td style={tdStyle}>
                   <small>{report._id.slice(-8)}</small>
                 </td>

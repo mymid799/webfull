@@ -1,11 +1,29 @@
 import React, { useEffect, useState } from "react";
-import ColumnManager, { ColumnHeader } from "../components/ColumnManager";
+import ColumnManager, { ColumnHeader, deleteColumn } from "../components/ColumnManager";
+import UrlCell from "../components/UrlCell";
 import "../styles/table.css";
 
 export default function FreeAntivirus() {
   const [data, setData] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); // ✅ thêm state tìm kiếm
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Wrapper function for optimized column deletion
+  const handleDeleteColumn = async (columnKey) => {
+    setIsLoading(true);
+    try {
+      await deleteColumn(columnKey, {
+        columns,
+        setColumns,
+        data,
+        setData,
+        category: 'antivirus'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }; // ✅ thêm state tìm kiếm
 
   const [columns, setColumns] = useState([
     { key: "toolName", label: "Tên Tool", type: "text" },
@@ -22,35 +40,75 @@ export default function FreeAntivirus() {
       .then((res) => setData(res))
       .catch(() => setData([]));
 
-    // Load cấu hình cột từ localStorage
-    try {
-      const configKey = `column_config_antivirus`;
-      const savedConfig = localStorage.getItem(configKey);
-      
-      if (savedConfig) {
-        const configData = JSON.parse(savedConfig);
-        console.log("✅ Loaded column config from localStorage:", configData);
-        setColumns(configData.columns);
-      } else {
-        console.log("📋 No saved config found, using defaults");
-        setColumns([
-          { key: "toolName", label: "Tên Tool", type: "text" },
-          { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
-          { key: "googleDrive", label: "Google", type: "url" },
-          { key: "oneDrive", label: "OneDrive", type: "url" },
-          { key: "note", label: "Note", type: "text" }
-        ]);
+    // Load cấu hình cột từ database
+    const loadColumnConfig = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5000/api/admin/columns/antivirus", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const configData = await response.json();
+          console.log("✅ Loaded column config from database:", configData);
+          setColumns(configData);
+        } else {
+          // Fallback to localStorage
+          const configKey = `column_config_antivirus`;
+          const savedConfig = localStorage.getItem(configKey);
+          
+          if (savedConfig) {
+            const configData = JSON.parse(savedConfig);
+            console.log("✅ Loaded column config from localStorage:", configData);
+            setColumns(configData.columns);
+          } else {
+            console.log("📋 No saved config found, using defaults");
+            setColumns([
+              { key: "toolName", label: "Tên Tool", type: "text" },
+              { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
+              { key: "googleDrive", label: "Google", type: "url" },
+              { key: "oneDrive", label: "OneDrive", type: "url" },
+              { key: "note", label: "Note", type: "text" }
+            ]);
+          }
+        }
+      } catch (err) {
+        console.warn("⚠️ Error loading column config from database, trying localStorage:", err);
+        // Fallback to localStorage
+        try {
+          const configKey = `column_config_antivirus`;
+          const savedConfig = localStorage.getItem(configKey);
+          
+          if (savedConfig) {
+            const configData = JSON.parse(savedConfig);
+            console.log("✅ Loaded column config from localStorage:", configData);
+            setColumns(configData.columns);
+          } else {
+            console.log("📋 No saved config found, using defaults");
+            setColumns([
+              { key: "toolName", label: "Tên Tool", type: "text" },
+              { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
+              { key: "googleDrive", label: "Google", type: "url" },
+              { key: "oneDrive", label: "OneDrive", type: "url" },
+              { key: "note", label: "Note", type: "text" }
+            ]);
+          }
+        } catch (localErr) {
+          console.warn("⚠️ Error loading column config, using defaults:", localErr);
+          setColumns([
+            { key: "toolName", label: "Tên Tool", type: "text" },
+            { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
+            { key: "googleDrive", label: "Google", type: "url" },
+            { key: "oneDrive", label: "OneDrive", type: "url" },
+            { key: "note", label: "Note", type: "text" }
+          ]);
+        }
       }
-    } catch (err) {
-      console.warn("⚠️ Error loading column config, using defaults:", err);
-      setColumns([
-        { key: "toolName", label: "Tên Tool", type: "text" },
-        { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
-        { key: "googleDrive", label: "Google", type: "url" },
-        { key: "oneDrive", label: "OneDrive", type: "url" },
-        { key: "note", label: "Note", type: "text" }
-      ]);
-    }
+    };
+    
+    loadColumnConfig();
 
     const token = localStorage.getItem("token");
     if (token) setIsAdmin(true);
@@ -199,15 +257,9 @@ export default function FreeAntivirus() {
                 <ColumnHeader
                   key={col.key}
                   column={col}
-                  onDelete={(key) => {
-                    setColumns(columns.filter(c => c.key !== key));
-                    setData(data.map(item => {
-                      const newItem = { ...item };
-                      delete newItem[key];
-                      return newItem;
-                    }));
-                  }}
+                  onDelete={handleDeleteColumn}
                   isAdmin={isAdmin}
+                  isLoading={isLoading}
                 />
               ))}
               {isAdmin && (
@@ -278,7 +330,16 @@ export default function FreeAntivirus() {
                         padding: "8px 10px",
                       }}
                     >
-                      {isAdmin ? (
+                      {col.type === 'url' && col.bitOptions ? (
+                        <UrlCell
+                          isAdmin={isAdmin}
+                          row={row}
+                          idx={idx}
+                          type="antivirus"
+                          handleChange={handleChange}
+                          columnKey={col.key}
+                        />
+                      ) : isAdmin ? (
                         <input
                           type={col.type}
                           value={row[col.key] || ""}
@@ -305,7 +366,7 @@ export default function FreeAntivirus() {
                           {col.key === "mainLink"
                             ? "Link gốc"
                             : col.key === "googleDrive"
-                            ? "Google Drive"
+                            ? "Drive"
                             : col.key === "oneDrive"
                             ? "OneDrive"
                             : "Link"}

@@ -2,6 +2,7 @@ import express from "express";
 import { verifyToken } from "../middleware/authMiddleware.js";
 import {
     getAllReports,
+    getReportById,
     getReportsByCategory,
     getReportsByStatus,
     createReport,
@@ -19,6 +20,7 @@ router.get("/public/stats", getReportStats); // Public endpoint để xem thốn
 
 // Routes cho admin (cần authentication)
 router.get("/", verifyToken, getAllReports);
+router.get("/:id", verifyToken, getReportById);
 router.get("/stats", verifyToken, getReportStats);
 router.get("/category/:category", verifyToken, getReportsByCategory);
 router.get("/status/:status", verifyToken, getReportsByStatus);

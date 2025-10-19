@@ -1,11 +1,30 @@
 import React, { useEffect, useState } from "react";
-import ColumnManager, { ColumnHeader } from "../components/ColumnManager";
+import ColumnManager, { ColumnHeader, deleteColumn } from "../components/ColumnManager";
+import UrlCell from "../components/UrlCell";
 import "../styles/table.css";
 
 export default function Windows() {
   const [data, setData] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // ✅ thêm state tìm kiếm
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Wrapper function for optimized column deletion
+  const handleDeleteColumn = async (columnKey) => {
+    setIsLoading(true);
+    try {
+      await deleteColumn(columnKey, {
+        columns,
+        setColumns,
+        data,
+        setData,
+        category: 'windows'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   const [columns, setColumns] = useState([
     { key: "version", label: "Version", type: "text" },
     { key: "edition", label: "Edition", type: "text" },
@@ -142,6 +161,7 @@ export default function Windows() {
             setData={setData}
             isAdmin={isAdmin}
             category="windows"
+            isLoading={isLoading}
           />
           <button
             onClick={addRow}
@@ -166,15 +186,9 @@ export default function Windows() {
                 <ColumnHeader
                   key={col.key}
                   column={col}
-                  onDelete={(key) => {
-                    setColumns(columns.filter(c => c.key !== key));
-                    setData(data.map(item => {
-                      const newItem = { ...item };
-                      delete newItem[key];
-                      return newItem;
-                    }));
-                  }}
+                  onDelete={handleDeleteColumn}
                   isAdmin={isAdmin}
+                  isLoading={isLoading}
                 />
               ))}
               {isAdmin && <th style={thStyle}>Thao tác</th>}
@@ -193,6 +207,15 @@ export default function Windows() {
                         idx={idx}
                         type={col.key}
                         handleChange={handleChange}
+                      />
+                    ) : col.type === 'url' && col.bitOptions ? (
+                      <UrlCell
+                        isAdmin={isAdmin}
+                        row={row}
+                        idx={idx}
+                        type="windows"
+                        handleChange={handleChange}
+                        columnKey={col.key}
                       />
                     ) : (
                       <EditableCell

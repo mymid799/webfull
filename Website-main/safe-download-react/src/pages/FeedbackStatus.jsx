@@ -336,20 +336,20 @@ export default function FeedbackStatus() {
                 {isAdmin && (
                   <td style={tdStyle}>
                     <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                      <button
-                        onClick={() => window.open(`/admin-feedback`, '_blank')}
-                        style={{
-                          background: "#007bff",
-                          color: "white",
-                          border: "none",
-                          padding: "4px 8px",
-                          borderRadius: "3px",
-                          cursor: "pointer",
-                          fontSize: "11px"
-                        }}
-                      >
-                        📝 Chi tiết
-                      </button>
+                        <button
+                          onClick={() => window.open(`/admin-feedback?id=${report._id}`, '_blank')}
+                          style={{
+                            background: "#007bff",
+                            color: "white",
+                            border: "none",
+                            padding: "4px 8px",
+                            borderRadius: "3px",
+                            cursor: "pointer",
+                            fontSize: "11px"
+                          }}
+                        >
+                          📝 Chi tiết
+                        </button>
                     </div>
                   </td>
                 )}

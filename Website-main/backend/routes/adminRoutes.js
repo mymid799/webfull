@@ -6,6 +6,8 @@ import {
   updateSoftware,
   deleteSoftware,
   saveColumnConfig,
+  deleteColumnFromData,
+  addColumnToData,
   getColumnConfig,
 } from "../controllers/adminController.js";
 
@@ -16,6 +18,8 @@ router.post("/", addSoftware);
 router.put("/:id", updateSoftware);
 router.delete("/:id", deleteSoftware);
 router.post("/columns/save", saveColumnConfig);
+router.post("/columns/delete", deleteColumnFromData);
+router.post("/columns/add", addColumnToData);
 router.get("/columns/:category", getColumnConfig);
 
 router.post("/bulkUpdate", async (req, res) => {

@@ -177,7 +177,7 @@ export default function EditableTable({ category, columns }) {
                       {col.key === "fshare"
                         ? "Fshare"
                         : col.key === "googleDrive"
-                        ? "Google Drive"
+                        ? "Drive"
                         : col.key === "oneDrive"
                         ? "OneDrive"
                         : "Link"}

@@ -1,11 +1,29 @@
 import React, { useEffect, useState } from "react";
-import ColumnManager, { ColumnHeader } from "../components/ColumnManager";
+import ColumnManager, { ColumnHeader, deleteColumn } from "../components/ColumnManager";
+import UrlCell from "../components/UrlCell";
 import "../styles/table.css";
 
 export default function Tools() {
   const [data, setData] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // ✅ thêm state tìm kiếm
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Wrapper function for optimized column deletion
+  const handleDeleteColumn = async (columnKey) => {
+    setIsLoading(true);
+    try {
+      await deleteColumn(columnKey, {
+        columns,
+        setColumns,
+        data,
+        setData,
+        category: 'tools'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const [columns, setColumns] = useState([
     { key: "toolName", label: "Tên Tool", type: "text" },
@@ -23,35 +41,75 @@ export default function Tools() {
       .then((res) => setData(res))
       .catch(() => setData([]));
 
-    // Load cấu hình cột từ localStorage
-    try {
-      const configKey = `column_config_tools`;
-      const savedConfig = localStorage.getItem(configKey);
-      
-      if (savedConfig) {
-        const configData = JSON.parse(savedConfig);
-        console.log("✅ Loaded column config from localStorage:", configData);
-        setColumns(configData.columns);
-      } else {
-        console.log("📋 No saved config found, using defaults");
-        setColumns([
-          { key: "toolName", label: "Tên Tool", type: "text" },
-          { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
-          { key: "googleDrive", label: "Google Drive", type: "url" },
-          { key: "ownCloud", label: "OwnCloud", type: "url" },
-          { key: "note", label: "Note", type: "text" }
-        ]);
+    // Load cấu hình cột từ database
+    const loadColumnConfig = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5000/api/admin/columns/tools", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const configData = await response.json();
+          console.log("✅ Loaded column config from database:", configData);
+          setColumns(configData);
+        } else {
+          // Fallback to localStorage
+          const configKey = `column_config_tools`;
+          const savedConfig = localStorage.getItem(configKey);
+          
+          if (savedConfig) {
+            const configData = JSON.parse(savedConfig);
+            console.log("✅ Loaded column config from localStorage:", configData);
+            setColumns(configData.columns);
+          } else {
+            console.log("📋 No saved config found, using defaults");
+            setColumns([
+              { key: "toolName", label: "Tên Tool", type: "text" },
+              { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
+              { key: "googleDrive", label: "Google Drive", type: "url" },
+              { key: "ownCloud", label: "OwnCloud", type: "url" },
+              { key: "note", label: "Note", type: "text" }
+            ]);
+          }
+        }
+      } catch (err) {
+        console.warn("⚠️ Error loading column config from database, trying localStorage:", err);
+        // Fallback to localStorage
+        try {
+          const configKey = `column_config_tools`;
+          const savedConfig = localStorage.getItem(configKey);
+          
+          if (savedConfig) {
+            const configData = JSON.parse(savedConfig);
+            console.log("✅ Loaded column config from localStorage:", configData);
+            setColumns(configData.columns);
+          } else {
+            console.log("📋 No saved config found, using defaults");
+            setColumns([
+              { key: "toolName", label: "Tên Tool", type: "text" },
+              { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
+              { key: "googleDrive", label: "Google Drive", type: "url" },
+              { key: "ownCloud", label: "OwnCloud", type: "url" },
+              { key: "note", label: "Note", type: "text" }
+            ]);
+          }
+        } catch (localErr) {
+          console.warn("⚠️ Error loading column config, using defaults:", localErr);
+          setColumns([
+            { key: "toolName", label: "Tên Tool", type: "text" },
+            { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
+            { key: "googleDrive", label: "Google Drive", type: "url" },
+            { key: "ownCloud", label: "OwnCloud", type: "url" },
+            { key: "note", label: "Note", type: "text" }
+          ]);
+        }
       }
-    } catch (err) {
-      console.warn("⚠️ Error loading column config, using defaults:", err);
-      setColumns([
-        { key: "toolName", label: "Tên Tool", type: "text" },
-        { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
-        { key: "googleDrive", label: "Google Drive", type: "url" },
-        { key: "ownCloud", label: "OwnCloud", type: "url" },
-        { key: "note", label: "Note", type: "text" }
-      ]);
-    }
+    };
+    
+    loadColumnConfig();
 
     const token = localStorage.getItem("token");
     if (token) setIsAdmin(true);
@@ -164,15 +222,9 @@ export default function Tools() {
                 <ColumnHeader
                   key={col.key}
                   column={col}
-                  onDelete={(key) => {
-                    setColumns(columns.filter(c => c.key !== key));
-                    setData(data.map(item => {
-                      const newItem = { ...item };
-                      delete newItem[key];
-                      return newItem;
-                    }));
-                  }}
+                  onDelete={handleDeleteColumn}
                   isAdmin={isAdmin}
+                  isLoading={isLoading}
                 />
               ))}
               {isAdmin && (
@@ -201,7 +253,16 @@ export default function Tools() {
                       padding: "8px 10px",
                     }}
                   >
-                    {isAdmin ? (
+                    {col.type === 'url' && col.bitOptions ? (
+                      <UrlCell
+                        isAdmin={isAdmin}
+                        row={row}
+                        idx={idx}
+                        type="tools"
+                        handleChange={handleChange}
+                        columnKey={col.key}
+                      />
+                    ) : isAdmin ? (
                       <input
                         type={col.type}
                         value={row[col.key] || ""}
@@ -228,7 +289,7 @@ export default function Tools() {
                         {col.key === "mainLink"
                           ? "Link gốc"
                           : col.key === "googleDrive"
-                          ? "Google Drive"
+                          ? "Drive"
                           : col.key === "ownCloud"
                           ? "OwnCloud"
                           : "Link"}

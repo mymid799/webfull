@@ -6,88 +6,240 @@ export default function ColumnManager({
   data, 
   setData, 
   isAdmin,
-  category 
+  category,
+  isLoading = false
 }) {
   const [showColumnModal, setShowColumnModal] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
   const [newColumnType, setNewColumnType] = useState("text");
+  const [isAddingColumn, setIsAddingColumn] = useState(false);
+  
+  // No longer need bit options - URL columns will use database mechanism like fshare, drive, oneDrive
 
-  // Thêm cột mới
+  // Thêm cột mới - Optimized version
   const addColumn = async () => {
     if (!newColumnName.trim()) return;
     
-    const newKey = newColumnName.toLowerCase().replace(/\s+/g, '_');
-    const newColumn = {
-      key: newKey,
-      label: newColumnName,
-      type: newColumnType
-    };
+    setIsAddingColumn(true);
     
-    const updatedColumns = [...columns, newColumn];
-    setColumns(updatedColumns);
-    
-    // Cập nhật dữ liệu với cột mới (thêm field rỗng cho tất cả record)
-    const updatedData = data.map(item => ({
-      ...item,
-      [newKey]: "" // Thêm field mới với giá trị rỗng
-    }));
-    setData(updatedData);
-    
-    // Lưu cấu hình cột vào localStorage
     try {
+      const newKey = newColumnName.toLowerCase().replace(/\s+/g, '_');
+      const newColumn = {
+        key: newKey,
+        label: newColumnName,
+        type: newColumnType
+      };
+      
+      const updatedColumns = [...columns, newColumn];
+      const token = localStorage.getItem("token");
+      
+      // Step 1: Add column to actual data in database
+      const addColumnResponse = await fetch("http://localhost:5000/api/admin/columns/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          category,
+          columnKey: newKey,
+          columnType: newColumnType
+        }),
+      });
+
+      if (!addColumnResponse.ok) {
+        let addResult;
+        try {
+          addResult = await addColumnResponse.json();
+        } catch (parseError) {
+          console.error("Failed to parse add column response:", parseError);
+          throw new Error(`Server error: ${addColumnResponse.status} ${addColumnResponse.statusText}`);
+        }
+        throw new Error(addResult.message || "Failed to add column to database");
+      }
+
+      // Step 2: Save column configuration
+      const saveConfigResponse = await fetch("http://localhost:5000/api/admin/columns/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          category,
+          columns: updatedColumns
+        }),
+      });
+
+      if (!saveConfigResponse.ok) {
+        let saveResult;
+        try {
+          saveResult = await saveConfigResponse.json();
+        } catch (parseError) {
+          console.error("Failed to parse save config response:", parseError);
+          throw new Error(`Server error: ${saveConfigResponse.status} ${saveConfigResponse.statusText}`);
+        }
+        throw new Error(saveResult.message || "Failed to save column configuration");
+      }
+
+      // Step 3: Update local state and reload data
+      setColumns(updatedColumns);
+      
+      // Reload data to get the new column from database
+      const dataResponse = await fetch(`http://localhost:5000/api/${category}`);
+      if (dataResponse.ok) {
+        const freshData = await dataResponse.json();
+        setData(freshData);
+      } else {
+        // Fallback: update local data with new column
+        const updatedData = data.map(item => {
+          const newItem = { ...item };
+          if (newColumnType === 'url') {
+            // For URL columns, add the 32bit, 64bit, Common, and Show fields
+            newItem[`${newKey}32`] = "";
+            newItem[`${newKey}64`] = "";
+            newItem[`${newKey}Common`] = "";
+            newItem[`${newKey}Show`] = "both";
+          } else {
+            newItem[newKey] = newColumnType === 'number' ? 0 : "";
+          }
+          return newItem;
+        });
+        setData(updatedData);
+      }
+
+      // Save to localStorage as backup
       const configKey = `column_config_${category}`;
       const configData = {
         category,
         columns: updatedColumns,
         updatedAt: new Date().toISOString()
       };
-      
       localStorage.setItem(configKey, JSON.stringify(configData));
-      console.log("✅ Cấu hình cột đã được lưu vào localStorage:", configData);
-      alert("✅ Cột mới đã được thêm! Nhớ bấm 'Lưu' để lưu vào database.");
-    } catch (err) {
-      console.error("❌ Lỗi khi lưu cấu hình cột:", err);
-      alert(`❌ Lỗi khi lưu cấu hình cột: ${err.message}`);
+      
+      console.log("✅ Column added successfully");
+      alert("✅ Cột mới đã được thêm thành công!");
+      
+    } catch (error) {
+      console.error("❌ Error adding column:", error);
+      alert(`❌ Lỗi khi thêm cột: ${error.message}`);
+    } finally {
+      setIsAddingColumn(false);
+      setNewColumnName("");
+      setNewColumnType("text");
+      setShowColumnModal(false);
     }
-    
-    setNewColumnName("");
-    setNewColumnType("text");
-    setShowColumnModal(false);
   };
 
-  // Xóa cột
+  // Xóa cột - Optimized version
   const _deleteColumn = async (columnKey) => {
     if (columns.length <= 1) {
       alert("Không thể xóa cột cuối cùng!");
       return;
     }
     
-    const updatedColumns = columns.filter(col => col.key !== columnKey);
-    setColumns(updatedColumns);
+    if (!confirm(`Bạn có chắc chắn muốn xóa cột "${columnKey}"? Hành động này không thể hoàn tác.`)) {
+      return;
+    }
     
-    const updatedData = data.map(item => {
-      const newItem = { ...item };
-      delete newItem[columnKey];
-      return newItem;
-    });
-    setData(updatedData);
+    setIsAddingColumn(true);
     
-    // Lưu cấu hình cột vào localStorage (temporary solution)
     try {
+      const updatedColumns = columns.filter(col => col.key !== columnKey);
+      const token = localStorage.getItem("token");
+      
+      // Step 1: Delete column from actual data in database
+      // For URL columns, we need to delete the 32bit, 64bit, and Show fields
+      const columnToDelete = columns.find(col => col.key === columnKey);
+      const isUrlColumn = columnToDelete && columnToDelete.type === 'url';
+      
+      const deleteResponse = await fetch("http://localhost:5000/api/admin/columns/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          category,
+          columnKey,
+          isUrlColumn,
+          urlFields: isUrlColumn ? [`${columnKey}32`, `${columnKey}64`, `${columnKey}Common`, `${columnKey}Show`] : undefined
+        }),
+      });
+
+      if (!deleteResponse.ok) {
+        const deleteResult = await deleteResponse.json();
+        throw new Error(deleteResult.message || "Failed to delete column from database");
+      }
+
+      // Step 2: Save updated column configuration
+      const saveConfigResponse = await fetch("http://localhost:5000/api/admin/columns/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          category,
+          columns: updatedColumns
+        }),
+      });
+
+      if (!saveConfigResponse.ok) {
+        const saveResult = await saveConfigResponse.json();
+        throw new Error(saveResult.message || "Failed to save column configuration");
+      }
+
+      // Step 3: Update local state and reload data
+      setColumns(updatedColumns);
+      
+      // Reload data to ensure column is completely removed
+      const dataResponse = await fetch(`http://localhost:5000/api/${category}`);
+      if (dataResponse.ok) {
+        const freshData = await dataResponse.json();
+        setData(freshData);
+      } else {
+        // Fallback: update local data by removing the column
+        const updatedData = data.map(item => {
+          const newItem = { ...item };
+          delete newItem[columnKey];
+          
+          // For URL columns, also remove the 32bit, 64bit, Common, and Show fields
+          if (isUrlColumn) {
+            delete newItem[`${columnKey}32`];
+            delete newItem[`${columnKey}64`];
+            delete newItem[`${columnKey}Common`];
+            delete newItem[`${columnKey}Show`];
+          }
+          
+          return newItem;
+        });
+        setData(updatedData);
+      }
+
+      // Save to localStorage as backup
       const configKey = `column_config_${category}`;
       const configData = {
         category,
         columns: updatedColumns,
         updatedAt: new Date().toISOString()
       };
-      
       localStorage.setItem(configKey, JSON.stringify(configData));
-      console.log("✅ Cấu hình cột đã được cập nhật trong localStorage:", configData);
-      alert("✅ Cột đã được xóa và cấu hình đã được lưu!");
-    } catch (err) {
-      console.error("❌ Lỗi khi lưu cấu hình cột:", err);
-      alert(`❌ Lỗi khi lưu cấu hình cột: ${err.message}`);
+      
+      console.log("✅ Column deleted successfully");
+      alert("✅ Cột đã được xóa thành công!");
+      
+    } catch (error) {
+      console.error("❌ Error deleting column:", error);
+      alert(`❌ Lỗi khi xóa cột: ${error.message}`);
+    } finally {
+      setIsAddingColumn(false);
     }
+  };
+
+  // Handle column type change
+  const handleColumnTypeChange = (type) => {
+    setNewColumnType(type);
   };
 
   return (
@@ -96,17 +248,19 @@ export default function ColumnManager({
       {isAdmin && (
         <button 
           onClick={() => setShowColumnModal(true)}
+          disabled={isLoading}
           style={{
             padding: "8px 16px",
-            background: "#28a745",
+            background: isLoading ? "#6c757d" : "#28a745",
             color: "white",
             border: "none",
             borderRadius: "4px",
-            cursor: "pointer",
-            marginRight: "10px"
+            cursor: isLoading ? "not-allowed" : "pointer",
+            marginRight: "10px",
+            opacity: isLoading ? 0.6 : 1
           }}
         >
-          ➕ Thêm cột
+           {(isAddingColumn || isLoading) ? "⏳ Đang xử lý..." : "➕ Thêm cột"}
         </button>
       )}
 
@@ -159,7 +313,7 @@ export default function ColumnManager({
               <label style={{ display: "block", marginBottom: 4 }}>Loại dữ liệu:</label>
               <select
                 value={newColumnType}
-                onChange={(e) => setNewColumnType(e.target.value)}
+                onChange={(e) => handleColumnTypeChange(e.target.value)}
                 style={{
                   width: "100%",
                   padding: 8,
@@ -174,20 +328,24 @@ export default function ColumnManager({
               </select>
             </div>
             
+            {/* URL columns will automatically use database mechanism like fshare, drive, oneDrive */}
+            
             <div style={{ display: "flex", gap: 8 }}>
               <button
                 onClick={addColumn}
+                disabled={isAddingColumn || isLoading}
                 style={{
                   flex: 1,
                   padding: 8,
-                  background: "#28a745",
+                  background: (isAddingColumn || isLoading) ? "#6c757d" : "#28a745",
                   color: "#fff",
                   border: "none",
                   borderRadius: 4,
-                  cursor: "pointer",
+                  cursor: (isAddingColumn || isLoading) ? "not-allowed" : "pointer",
+                  opacity: (isAddingColumn || isLoading) ? 0.6 : 1
                 }}
               >
-                Thêm cột
+                 {(isAddingColumn || isLoading) ? "⏳ Đang thêm..." : "Thêm cột"}
               </button>
               <button
                 onClick={() => {
@@ -214,18 +372,137 @@ export default function ColumnManager({
   );
 }
 
+// Export delete function for use in other components
+export const deleteColumn = async (columnKey, { columns, setColumns, data, setData, category }) => {
+  if (columns.length <= 1) {
+    alert("Không thể xóa cột cuối cùng!");
+    return;
+  }
+  
+  if (!confirm(`Bạn có chắc chắn muốn xóa cột "${columnKey}"? Hành động này không thể hoàn tác.`)) {
+    return;
+  }
+  
+  try {
+    const updatedColumns = columns.filter(col => col.key !== columnKey);
+    const token = localStorage.getItem("token");
+    
+    // Step 1: Delete column from actual data in database
+    // For URL columns, we need to delete the 32bit, 64bit, and Show fields
+    const columnToDelete = columns.find(col => col.key === columnKey);
+    const isUrlColumn = columnToDelete && columnToDelete.type === 'url';
+    
+    const deleteResponse = await fetch("http://localhost:5000/api/admin/columns/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+        body: JSON.stringify({
+          category,
+          columnKey,
+          isUrlColumn,
+          urlFields: isUrlColumn ? [`${columnKey}32`, `${columnKey}64`, `${columnKey}Common`, `${columnKey}Show`] : undefined
+        }),
+    });
+
+    if (!deleteResponse.ok) {
+      let deleteResult;
+      try {
+        deleteResult = await deleteResponse.json();
+      } catch (parseError) {
+        console.error("Failed to parse delete response:", parseError);
+        throw new Error(`Server error: ${deleteResponse.status} ${deleteResponse.statusText}`);
+      }
+      throw new Error(deleteResult.message || "Failed to delete column from database");
+    }
+
+    // Step 2: Save updated column configuration
+    const saveConfigResponse = await fetch("http://localhost:5000/api/admin/columns/save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        category,
+        columns: updatedColumns
+      }),
+    });
+
+    if (!saveConfigResponse.ok) {
+      let saveResult;
+      try {
+        saveResult = await saveConfigResponse.json();
+      } catch (parseError) {
+        console.error("Failed to parse save response:", parseError);
+        throw new Error(`Server error: ${saveConfigResponse.status} ${saveConfigResponse.statusText}`);
+      }
+      throw new Error(saveResult.message || "Failed to save column configuration");
+    }
+
+    // Step 3: Update local state and reload data
+    setColumns(updatedColumns);
+    
+    // Reload data to ensure column is completely removed
+    const dataResponse = await fetch(`http://localhost:5000/api/${category}`);
+    if (dataResponse.ok) {
+      const freshData = await dataResponse.json();
+      setData(freshData);
+    } else {
+      // Fallback: update local data by removing the column
+      const updatedData = data.map(item => {
+        const newItem = { ...item };
+        delete newItem[columnKey];
+        
+        // For URL columns, also remove the 32bit, 64bit, Common, and Show fields
+        if (isUrlColumn) {
+          delete newItem[`${columnKey}32`];
+          delete newItem[`${columnKey}64`];
+          delete newItem[`${columnKey}Common`];
+          delete newItem[`${columnKey}Show`];
+        }
+        
+        return newItem;
+      });
+      setData(updatedData);
+    }
+
+    // Save to localStorage as backup
+    const configKey = `column_config_${category}`;
+    const configData = {
+      category,
+      columns: updatedColumns,
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(configKey, JSON.stringify(configData));
+    
+    console.log("✅ Column deleted successfully");
+    alert("✅ Cột đã được xóa thành công!");
+    
+  } catch (error) {
+    console.error("❌ Error deleting column:", error);
+    alert(`❌ Lỗi khi xóa cột: ${error.message}`);
+  }
+};
+
 // Component để render header với nút xóa cột
-export function ColumnHeader({ column, onDelete, isAdmin }) {
+export function ColumnHeader({ column, onDelete, isAdmin, isLoading }) {
   return (
     <th className="column-header">
       {column.label}
       {isAdmin && (
         <button
           onClick={() => onDelete(column.key)}
+          disabled={isLoading}
           className="column-delete-btn"
-          title="Xóa cột"
+          title={isLoading ? "Đang xử lý..." : "Xóa cột"}
+          style={{
+            opacity: isLoading ? 0.5 : 1,
+            cursor: isLoading ? "not-allowed" : "pointer"
+          }}
         >
-          ✕
+          {isLoading ? "⏳" : "✕"}
         </button>
       )}
     </th>

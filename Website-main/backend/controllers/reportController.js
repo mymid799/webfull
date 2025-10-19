@@ -10,6 +10,22 @@ export const getAllReports = async (req, res) => {
     }
 };
 
+// GET single report by ID (chỉ admin)
+export const getReportById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const report = await Report.findById(id);
+
+        if (!report) {
+            return res.status(404).json({ message: "Không tìm thấy báo cáo" });
+        }
+
+        res.json(report);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 // GET reports by category (chỉ admin)
 export const getReportsByCategory = async (req, res) => {
     try {

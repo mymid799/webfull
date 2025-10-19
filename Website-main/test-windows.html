@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Windows Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .debug {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Test Windows Page</h1>
+
+    <div class="debug">
+        <strong>Debug Info:</strong>
+        <div id="debug-info">Loading...</div>
+    </div>
+
+    <div id="content">Loading data...</div>
+
+    <script>
+        console.log("🔄 Starting Windows test...");
+
+        // Test API calls
+        async function testWindowsAPI() {
+            try {
+                console.log("📡 Testing Windows API...");
+                const response = await fetch("http://localhost:5000/api/windows");
+                console.log("📡 Windows API response:", response.status);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("✅ Windows data:", data);
+                    document.getElementById('debug-info').innerHTML = `Data loaded: ${data.length} items`;
+                    renderData(data);
+                } else {
+                    console.error("❌ Windows API error:", response.status);
+                    document.getElementById('debug-info').innerHTML = `API Error: ${response.status}`;
+                }
+            } catch (error) {
+                console.error("❌ Error:", error);
+                document.getElementById('debug-info').innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        function renderData(data) {
+            const content = document.getElementById('content');
+            if (data.length === 0) {
+                content.innerHTML = "<p>No data available</p>";
+                return;
+            }
+
+            let html = '<table><thead><tr>';
+            const columns = ['version', 'edition', 'fshare', 'drive', 'oneDrive', 'sha1'];
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            data.forEach(row => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    let value = row[col] || '-';
+                    if (col === 'fshare' || col === 'drive' || col === 'oneDrive') {
+                        // Show URL fields
+                        const url32 = row[`${col}32`] || '';
+                        const url64 = row[`${col}64`] || '';
+                        const show = row[`${col}Show`] || 'both';
+
+                        if (show === 'both') {
+                            value = `32-bit: ${url32}<br>64-bit: ${url64}`;
+                        } else if (show === '32') {
+                            value = url32;
+                        } else if (show === '64') {
+                            value = url64;
+                        } else {
+                            value = '-';
+                        }
+                    }
+                    html += `<td>${value}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            content.innerHTML = html;
+        }
+
+        // Start test
+        testWindowsAPI();
+    </script>
+</body>
+
+</html>
