@@ -392,63 +392,97 @@ export default function Header() {
               </div>
             )}
             
-            <input
-              type="text"
-              placeholder="Username"
-              required
-              style={{
-                width: "100%",
-                marginBottom: 10,
-                padding: 8,
-                border: "1px solid #ccc",
-                borderRadius: 6,
-              }}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              required
-              style={{
-                width: "100%",
-                marginBottom: 12,
-                padding: 8,
-                border: "1px solid #ccc",
-                borderRadius: 6,
-              }}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-            />
-            <button
-              type="submit"
-              style={{
-                width: "100%",
-                padding: 8,
-                background: "#b84e00",
-                color: "#fff",
-                border: "none",
-                borderRadius: 6,
-              }}
-            >
-              Đăng nhập
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowLogin(false);
-                setLoginMessage("");
-                setLoginMessageType("");
-              }}
-              style={{
-                width: "100%",
-                padding: 8,
-                marginTop: 8,
-                border: "1px solid #ccc",
-                borderRadius: 6,
-                background: "#fafafa",
-              }}
-            >
-              Hủy
-            </button>
+            <div style={{ marginBottom: "12px" }}>
+              <input
+                type="text"
+                placeholder="Username"
+                required
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  outline: "none",
+                  transition: "border-color 0.3s ease",
+                  boxSizing: "border-box"
+                }}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                onFocus={(e) => e.target.style.borderColor = "#b84e00"}
+                onBlur={(e) => e.target.style.borderColor = "#ddd"}
+              />
+            </div>
+            <div style={{ marginBottom: "16px" }}>
+              <input
+                type="password"
+                placeholder="Password"
+                required
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  outline: "none",
+                  transition: "border-color 0.3s ease",
+                  boxSizing: "border-box"
+                }}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                onFocus={(e) => e.target.style.borderColor = "#b84e00"}
+                onBlur={(e) => e.target.style.borderColor = "#ddd"}
+              />
+            </div>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+              <button
+                type="submit"
+                style={{
+                  flex: 1,
+                  padding: "12px 16px",
+                  background: "#b84e00",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "background-color 0.3s ease"
+                }}
+                onMouseOver={(e) => e.target.style.background = "#9a3e00"}
+                onMouseOut={(e) => e.target.style.background = "#b84e00"}
+              >
+                Đăng nhập
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLogin(false);
+                  setLoginMessage("");
+                  setLoginMessageType("");
+                }}
+                style={{
+                  flex: 1,
+                  padding: "12px 16px",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  background: "#f8f9fa",
+                  color: "#495057",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease"
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.background = "#e9ecef";
+                  e.target.style.borderColor = "#adb5bd";
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = "#f8f9fa";
+                  e.target.style.borderColor = "#ddd";
+                }}
+              >
+                Hủy
+              </button>
+            </div>
           </form>
         </div>
       )}

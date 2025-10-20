@@ -327,11 +327,12 @@ export default function Windows() {
                 {columns.map((col) => (
                   <td key={col.key} style={tdStyle}>
                     {col.type === 'url' ? (
-                      <LinkCell
+                      <UrlCell
                         isAdmin={isAdmin}
                         row={row}
                         idx={idx}
                         type={col.key}
+                        columnKey={col.key}
                         handleChange={handleChange}
                       />
                     ) : (

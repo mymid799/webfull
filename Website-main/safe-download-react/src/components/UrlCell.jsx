@@ -10,47 +10,99 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
 
   if (isAdmin) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <div style={{ display: "flex", gap: 6 }}>
-          <input
-            placeholder="32-bit"
-            value={link32 || ""}
-            onChange={(e) => handleChange(idx, `${prefix}32`, e.target.value)}
-            style={{
-              width: "100%",
-              padding: "4px 8px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              fontSize: "12px"
-            }}
-          />
-          <input
-            placeholder="64-bit"
-            value={link64 || ""}
-            onChange={(e) => handleChange(idx, `${prefix}64`, e.target.value)}
-            style={{
-              width: "100%",
-              padding: "4px 8px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              fontSize: "12px"
-            }}
-          />
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* 32-bit and 64-bit inputs side by side */}
+        <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ 
+              display: "block", 
+              fontSize: "11px", 
+              fontWeight: "600", 
+              color: "#007bff", 
+              marginBottom: "4px",
+              textAlign: "center"
+            }}>
+              32-bit
+            </label>
+            <input
+              placeholder="Nhập link 32-bit..."
+              value={link32 || ""}
+              onChange={(e) => handleChange(idx, `${prefix}32`, e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                border: "1px solid #007bff",
+                borderRadius: "6px",
+                fontSize: "12px",
+                outline: "none",
+                transition: "border-color 0.3s ease",
+                boxSizing: "border-box"
+              }}
+              onFocus={(e) => e.target.style.borderColor = "#0056b3"}
+              onBlur={(e) => e.target.style.borderColor = "#007bff"}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={{ 
+              display: "block", 
+              fontSize: "11px", 
+              fontWeight: "600", 
+              color: "#28a745", 
+              marginBottom: "4px",
+              textAlign: "center"
+            }}>
+              64-bit
+            </label>
+            <input
+              placeholder="Nhập link 64-bit..."
+              value={link64 || ""}
+              onChange={(e) => handleChange(idx, `${prefix}64`, e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                border: "1px solid #28a745",
+                borderRadius: "6px",
+                fontSize: "12px",
+                outline: "none",
+                transition: "border-color 0.3s ease",
+                boxSizing: "border-box"
+              }}
+              onFocus={(e) => e.target.style.borderColor = "#1e7e34"}
+              onBlur={(e) => e.target.style.borderColor = "#28a745"}
+            />
+          </div>
         </div>
 
         {/* Common link input */}
-        <input
-          placeholder="Common link"
-          value={linkCommon || ""}
-          onChange={(e) => handleChange(idx, `${prefix}Common`, e.target.value)}
-          style={{
-            width: "100%",
-            padding: "4px 8px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-            fontSize: "12px"
-          }}
-        />
+        <div>
+          <label style={{ 
+            display: "block", 
+            fontSize: "11px", 
+            fontWeight: "600", 
+            color: "#6f42c1", 
+            marginBottom: "4px",
+            textAlign: "center"
+          }}>
+            Common Link
+          </label>
+          <input
+            placeholder="Nhập link chung..."
+            value={linkCommon || ""}
+            onChange={(e) => handleChange(idx, `${prefix}Common`, e.target.value)}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              border: "1px solid #6f42c1",
+              borderRadius: "6px",
+              fontSize: "12px",
+              outline: "none",
+              transition: "border-color 0.3s ease",
+              boxSizing: "border-box"
+            }}
+            onFocus={(e) => e.target.style.borderColor = "#5a2d91"}
+            onBlur={(e) => e.target.style.borderColor = "#6f42c1"}
+          />
+        </div>
 
         {/* Radio buttons for display option */}
         <div style={{ 

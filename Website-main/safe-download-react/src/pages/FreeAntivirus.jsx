@@ -450,45 +450,129 @@ export default function FreeAntivirus() {
               row?.type === 'antivirus_note_row' ? (
                 <tr key={`antivirus-row-${idx}`}>
                   <td colSpan={columns.length + (isAdmin ? 1 : 0)} style={{
-                    background: '#fff9db',
-                    border: '1px solid #ffe08a',
-                    padding: '8px 12px',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    border: 'none',
+                    padding: '16px 20px',
                     fontWeight: 500,
-                    color: '#333'
+                    color: '#fff',
+                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+                    borderRadius: '8px',
+                    margin: '8px 0',
+                    position: 'relative',
+                    overflow: 'hidden'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', width: '100%' }}>
-                      {isAdmin ? (
-                        <>
-                          <textarea
-                            value={row.noteContent || ''}
-                            onChange={(e) => handleChange(idx, 'noteContent', e.target.value)}
-                            placeholder="Nội dung"
-                            style={{
+                    <div style={{ 
+                      position: 'absolute', 
+                      top: 0, 
+                      left: 0, 
+                      right: 0, 
+                      height: '3px', 
+                      background: 'linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4)',
+                      borderRadius: '8px 8px 0 0'
+                    }}></div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', width: '100%', position: 'relative', zIndex: 1 }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 8, 
+                        flex: 1,
+                        minWidth: 0
+                      }}>
+                        <div style={{
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          borderRadius: '50%',
+                          width: '24px',
+                          height: '24px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          flexShrink: 0
+                        }}>
+                          📝
+                        </div>
+                        {isAdmin ? (
+                          <>
+                            <textarea
+                              value={row.noteContent || ''}
+                              onChange={(e) => handleChange(idx, 'noteContent', e.target.value)}
+                              placeholder="Nhập nội dung note..."
+                              style={{
+                                flex: 1,
+                                border: '2px solid rgba(255, 255, 255, 0.3)',
+                                borderRadius: '8px',
+                                padding: '12px 16px',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                backdropFilter: 'blur(10px)',
+                                minHeight: '80px',
+                                resize: 'vertical',
+                                color: '#fff',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                outline: 'none',
+                                transition: 'all 0.3s ease',
+                                '::placeholder': {
+                                  color: 'rgba(255, 255, 255, 0.7)'
+                                }
+                              }}
+                              onFocus={(e) => {
+                                e.target.style.border = '2px solid rgba(255, 255, 255, 0.6)';
+                                e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                              }}
+                              onBlur={(e) => {
+                                e.target.style.border = '2px solid rgba(255, 255, 255, 0.3)';
+                                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                              }}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <div style={{
                               flex: 1,
-                              border: '1px solid #ffd43b',
-                              borderRadius: 4,
-                              padding: '6px 8px',
-                              background: '#fffdf0',
-                              minHeight: 60,
-                              resize: 'vertical'
-                            }}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <span>{row.noteContent}</span>
-                        </>
-                      )}
+                              padding: '12px 16px',
+                              background: 'rgba(255, 255, 255, 0.1)',
+                              borderRadius: '8px',
+                              backdropFilter: 'blur(10px)',
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              fontSize: '14px',
+                              lineHeight: '1.5',
+                              wordBreak: 'break-word'
+                            }}>
+                              {row.noteContent}
+                            </div>
+                          </>
+                        )}
+                      </div>
                       {isAdmin && (
                         <button
                           onClick={() => deleteRow(idx)}
                           style={{
-                            marginLeft: 'auto',
+                            background: 'rgba(255, 107, 107, 0.8)',
                             border: 'none',
-                            background: 'transparent',
+                            borderRadius: '50%',
+                            width: '32px',
+                            height: '32px',
                             cursor: 'pointer',
-                            color: '#c92a2a',
-                            fontWeight: 700
+                            color: '#fff',
+                            fontWeight: 'bold',
+                            fontSize: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.3s ease',
+                            boxShadow: '0 2px 8px rgba(255, 107, 107, 0.3)',
+                            flexShrink: 0
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.background = 'rgba(255, 107, 107, 1)';
+                            e.target.style.transform = 'scale(1.1)';
+                            e.target.style.boxShadow = '0 4px 12px rgba(255, 107, 107, 0.5)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.background = 'rgba(255, 107, 107, 0.8)';
+                            e.target.style.transform = 'scale(1)';
+                            e.target.style.boxShadow = '0 2px 8px rgba(255, 107, 107, 0.3)';
                           }}
                           title="Xóa note"
                         >
