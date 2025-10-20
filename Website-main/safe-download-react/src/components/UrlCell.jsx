@@ -83,7 +83,7 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
             marginBottom: "4px",
             textAlign: "center"
           }}>
-            Common Link
+            Download
           </label>
           <input
             placeholder="Nhập link chung..."
@@ -230,7 +230,7 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
               flex: 1,
               lineHeight: "1.2"
             }}>
-              Hiển Common
+              Hiển Download
             </span>
           </label>
           <label style={{ 
@@ -423,7 +423,7 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
           e.target.style.color = "#6f42c1";
         }}
       >
-        🔗 Common
+        🔗 Download
       </a>
     );
   if (show === "both")
@@ -528,7 +528,7 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
               e.target.style.color = "#6f42c1";
             }}
           >
-            🔗 Common
+            🔗 Download
           </a>
         )}
       </div>
@@ -565,7 +565,7 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
           e.target.style.color = "#6f42c1";
         }}
       >
-        🔗 Common
+        🔗 Download
       </a>
     );
   

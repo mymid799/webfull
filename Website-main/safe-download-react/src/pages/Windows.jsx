@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ColumnManager, { ColumnHeader, deleteColumn } from "../components/ColumnManager";
 import UrlCell from "../components/UrlCell";
+import SmartTextCell from "../components/SmartTextCell";
 import AdminBitOptionsButton from "../components/AdminBitOptionsButton";
 import BitOptionsDropdown from "../components/BitOptionsDropdown";
 import "../styles/table.css";
@@ -350,7 +351,7 @@ export default function Windows() {
                         handleChange={handleChange}
                       />
                     ) : (
-                      <EditableCell
+                      <SmartTextCell
                         isAdmin={isAdmin}
                         value={row[col.key]}
                         onChange={(v) => handleChange(idx, col.key, v)}
