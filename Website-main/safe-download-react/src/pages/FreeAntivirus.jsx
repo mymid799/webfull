@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import ColumnManager, { ColumnHeader, deleteColumn } from "../components/ColumnManager";
 import UrlCell from "../components/UrlCell";
+import AdminBitOptionsButton from "../components/AdminBitOptionsButton";
+import BitOptionsDropdown from "../components/BitOptionsDropdown";
 import "../styles/table.css";
 
 export default function FreeAntivirus() {
@@ -8,6 +10,18 @@ export default function FreeAntivirus() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Dynamic column management states
+  const [showAddColumnModal, setShowAddColumnModal] = useState(false);
+  const [showAddRowModal, setShowAddRowModal] = useState(false);
+  const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
+  const [newColumnName, setNewColumnName] = useState("");
+  const [newColumnType, setNewColumnType] = useState("text");
+  const [newColumnBitOption, setNewColumnBitOption] = useState("");
+  
+  // Note creation states
+  const [noteTitle, setNoteTitle] = useState("");
+  const [noteContent, setNoteContent] = useState("");
   
   // Wrapper function for optimized column deletion
   const handleDeleteColumn = async (columnKey) => {
@@ -23,7 +37,7 @@ export default function FreeAntivirus() {
     } finally {
       setIsLoading(false);
     }
-  }; // ✅ thêm state tìm kiếm
+  };
 
   const [columns, setColumns] = useState([
     { key: "toolName", label: "Tên Tool", type: "text" },
@@ -34,53 +48,52 @@ export default function FreeAntivirus() {
   ]);
 
   useEffect(() => {
-    // Load dữ liệu
-    fetch("http://localhost:5000/api/antivirus")
-      .then((res) => res.json())
-      .then((res) => setData(res))
-      .catch(() => setData([]));
-
-    // Load cấu hình cột từ database
-    const loadColumnConfig = async () => {
+    // Load dữ liệu và cấu hình cột từ database
+    const loadData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/admin/columns/antivirus", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        console.log("📥 Loading Antivirus data from database...");
+        const res = await fetch("http://localhost:5000/api/column-config/data/antivirus");
+        const result = await res.json();
+        console.log("📥 Load response (antivirus):", result);
         
-        if (response.ok) {
-          const configData = await response.json();
-          console.log("✅ Loaded column config from database:", configData);
-          setColumns(configData);
-        } else {
-          // Fallback to localStorage
-          const configKey = `column_config_antivirus`;
-          const savedConfig = localStorage.getItem(configKey);
+        if (res.ok && result.success) {
+          console.log("📥 Loaded data (antivirus):", result.data.data);
+          setData(result.data.data || []);
           
-          if (savedConfig) {
-            const configData = JSON.parse(savedConfig);
-            console.log("✅ Loaded column config from localStorage:", configData);
-            setColumns(configData.columns);
+          if (result.data.columnConfig && result.data.columnConfig.columns) {
+            console.log("✅ Loaded column config from database:", result.data.columnConfig);
+            setColumns(result.data.columnConfig.columns);
+            // Lưu vào localStorage để backup
+            localStorage.setItem(`column_config_antivirus`, JSON.stringify({ columns: result.data.columnConfig.columns }));
           } else {
-            console.log("📋 No saved config found, using defaults");
-            setColumns([
-              { key: "toolName", label: "Tên Tool", type: "text" },
-              { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
-              { key: "googleDrive", label: "Google", type: "url" },
-              { key: "oneDrive", label: "OneDrive", type: "url" },
-              { key: "note", label: "Note", type: "text" }
-            ]);
+            // Fallback: load từ localStorage
+            loadFromLocalStorage();
           }
+        } else {
+          // Fallback: load từ localStorage
+          loadFromLocalStorage();
         }
-      } catch (err) {
-        console.warn("⚠️ Error loading column config from database, trying localStorage:", err);
-        // Fallback to localStorage
+      } catch (error) {
+        console.warn("⚠️ Error loading from database, using localStorage:", error);
+        loadFromLocalStorage();
+      }
+    };
+
+    const loadFromLocalStorage = () => {
         try {
           const configKey = `column_config_antivirus`;
-          const savedConfig = localStorage.getItem(configKey);
+          const dataKey = `antivirus_data`;
+
+          // Load data backup
+          const savedData = localStorage.getItem(dataKey);
+          if (savedData) {
+            const parsed = JSON.parse(savedData);
+            console.log("📥 Loaded antivirus data from localStorage:", parsed);
+            setData(parsed);
+          }
           
+          // Load columns
+          const savedConfig = localStorage.getItem(configKey);
           if (savedConfig) {
             const configData = JSON.parse(savedConfig);
             console.log("✅ Loaded column config from localStorage:", configData);
@@ -92,103 +105,184 @@ export default function FreeAntivirus() {
               { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
               { key: "googleDrive", label: "Google", type: "url" },
               { key: "oneDrive", label: "OneDrive", type: "url" },
-              { key: "note", label: "Note", type: "text" }
+              { key: "note", label: "Note", type: "text" },
             ]);
           }
-        } catch (localErr) {
-          console.warn("⚠️ Error loading column config, using defaults:", localErr);
+        } catch (err) {
+          console.warn("⚠️ Error loading column config, using defaults:", err);
           setColumns([
             { key: "toolName", label: "Tên Tool", type: "text" },
             { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
             { key: "googleDrive", label: "Google", type: "url" },
             { key: "oneDrive", label: "OneDrive", type: "url" },
-            { key: "note", label: "Note", type: "text" }
+            { key: "note", label: "Note", type: "text" },
           ]);
         }
-      }
     };
-    
-    loadColumnConfig();
 
+    loadData();
+
+    // Check admin status
     const token = localStorage.getItem("token");
-    if (token) setIsAdmin(true);
+    if (token) {
+      setIsAdmin(true);
+    }
   }, []);
 
+  // Add new row function (align with Windows)
   const addRow = () => {
-    setData([
-      ...data,
-      {
-        type: "normal", // phân loại hàng thường
-        toolName: "",
-        mainLink: "",
-        googleDrive: "",
-        oneDrive: "",
-        note: "",
-      },
-    ]);
+    const newRow = {};
+
+    columns.forEach(col => {
+      if (col.type === 'url') {
+        newRow[`${col.key}32`] = "";
+        newRow[`${col.key}64`] = "";
+        newRow[`${col.key}Show`] = "both";
+      } else {
+        newRow[col.key] = "";
+      }
+    });
+
+    setData([...data, newRow]);
+    setShowAddRowModal(false);
   };
 
-  const addNoteRow = () => {
-    setData([
-      ...data,
-      {
-        type: "note", // hàng chú thích đặc biệt
-        note: "Nhập ghi chú ở đây...",
-      },
-    ]);
+  // Add new column function
+  const addColumn = () => {
+    if (!newColumnName.trim()) return;
+    
+    const newKey = newColumnName.toLowerCase().replace(/\s+/g, '_');
+    const newColumn = {
+      key: newKey,
+      label: newColumnName,
+      type: newColumnType,
+      ...(newColumnType === "url" && newColumnBitOption && {
+        bitOption: newColumnBitOption
+      })
+    };
+    
+    setColumns([...columns, newColumn]);
+    
+    // Nếu là cột URL, thêm các trường 32-bit, 64-bit và Show vào tất cả hàng hiện có (align Windows)
+    if (newColumnType === "url") {
+      const updatedData = data.map(row => ({
+        ...row,
+        [`${newKey}32`]: "",
+        [`${newKey}64`]: "",
+        [`${newKey}Show`]: "both"
+      }));
+      setData(updatedData);
+    } else {
+      // Nếu không phải URL, thêm trường thông thường
+      const updatedData = data.map(row => ({
+        ...row,
+        [newKey]: ""
+      }));
+      setData(updatedData);
+    }
+    
+    setNewColumnName("");
+    setNewColumnType("text");
+    setNewColumnBitOption("");
+    setShowAddColumnModal(false);
+    
+    if (newColumnType === "url") {
+      alert(`✅ Đã thêm cột ${newColumnName} với các ô input 32-bit, 64-bit và Show!`);
+    }
   };
 
-  const deleteRow = (index) => {
-    const newData = [...data];
-    newData.splice(index, 1);
-    setData(newData);
+  // Create note function -> insert as special merged note row (content only)
+  const createNote = () => {
+    if (!noteContent.trim()) return;
+
+    const noteRow = {
+      type: 'antivirus_note_row',
+      noteContent: noteContent,
+      createdAt: new Date().toISOString()
+    };
+
+    setData([...data, noteRow]);
+    setNoteContent("");
+    setShowCreateNoteModal(false);
   };
 
-  const handleChange = (index, key, value) => {
-    const updated = [...data];
-    updated[index][key] = value;
-    setData(updated);
-  };
-
+  // Save changes function
   const saveChanges = async () => {
     const token = localStorage.getItem("token");
     if (!token) return alert("🔒 Bạn cần đăng nhập admin!");
 
     try {
-      const res = await fetch("http://localhost:5000/api/antivirus/save", {
+      console.log("💾 Saving Antivirus data:", { category: "antivirus", data, columns });
+      // Lưu cấu hình cột và dữ liệu
+      const res = await fetch("http://localhost:5000/api/column-config/data/save", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          category: "antivirus",
+          data: data,
+          columnConfig: {
+            columns: columns
+          }
+        }),
       });
 
       const result = await res.json();
-      if (res.ok) alert(result.message || "✅ Dữ liệu đã lưu!");
-      else alert(result.message || "❌ Lưu thất bại!");
-    } catch (err) {
-      console.error(err);
+      console.log("💾 Save response (antivirus):", result);
+      if (res.ok) {
+        alert(result.message || "✅ Dữ liệu và cấu hình cột đã lưu!");
+        // Lưu cấu hình cột vào localStorage
+        localStorage.setItem(`column_config_antivirus`, JSON.stringify({ columns }));
+        // Backup data
+        localStorage.setItem(`antivirus_data`, JSON.stringify(data));
+      } else {
+        alert(result.message || "❌ Lưu thất bại!");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
       alert("⚠️ Lỗi khi gửi dữ liệu!");
     }
   };
 
-  // ✅ Bộ lọc realtime cho dữ liệu
+  // Handle cell changes
+  const handleChange = (idx, field, value) => {
+    const newData = [...data];
+    if (newData[idx]) {
+      newData[idx][field] = value;
+      setData(newData);
+    }
+  };
+
+  // Delete row function (align with Windows)
+  const deleteRow = (idx) => {
+    const newData = [...data];
+    newData.splice(idx, 1);
+    setData(newData);
+  };
+
+  // Filter data based on search term
   const filteredData = data.filter((row) =>
-    Object.values(row).join(" ").toLowerCase().includes(searchTerm)
+    Object.values(row).some((value) =>
+      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
+
 
   return (
     <div style={{ padding: "20px 40px" }}>
       <h2 style={{ color: "#b84e00", textAlign: "center" }}>
-        FREE ANTIVIRUS / AN TOÀN THÔNG TIN
+        FREE ANTIVIRUS
       </h2>
+
+      {/* Note bar removed: notes are now normal table rows */}
 
       {/* 🔍 Thanh tìm kiếm */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>
         <input
           type="text"
-          placeholder="🔍 Tìm kiếm Antivirus theo tên, ghi chú hoặc link tải..."
+          placeholder="🔍 Tìm kiếm Antivirus theo tên, link hoặc note..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
           className="search-input"
@@ -197,54 +291,139 @@ export default function FreeAntivirus() {
 
       {isAdmin && (
         <div className="control-buttons">
-          <ColumnManager 
-            columns={columns}
-            setColumns={setColumns}
-            data={data}
-            setData={setData}
-            isAdmin={isAdmin}
-            category="antivirus"
+          <AdminBitOptionsButton 
+            onOptionSelect={(option) => {
+              console.log('Selected bit option:', option);
+              alert(`Đã chọn: ${option.label}\nMô tả: ${option.description}`);
+            }}
           />
+          
           <button
-            onClick={addRow}
-            className="btn-add"
-          >
-            ➕ Thêm hàng
-          </button>
-          <button
-            onClick={addNoteRow}
+            onClick={() => setShowAddColumnModal(true)}
+            className="btn-add-column"
             style={{
-              background: "linear-gradient(135deg, #17a2b8 0%, #138496 100%)",
+              background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
               color: "white",
               border: "none",
-              borderRadius: 8,
-              padding: "10px 20px",
+              borderRadius: "8px",
+              padding: "10px 16px",
               cursor: "pointer",
-              fontWeight: 600,
-              fontSize: 14,
-              transition: "all 0.2s ease",
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-              boxShadow: "0 2px 4px rgba(23, 162, 184, 0.3)",
+              fontSize: "13px",
+              fontWeight: "600",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(40, 167, 69, 0.3)",
+              minWidth: "120px",
+              justifyContent: "center"
             }}
-            onMouseEnter={(e) => {
-              e.target.style.background = "linear-gradient(135deg, #138496 0%, #0f6674 100%)";
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.boxShadow = "0 4px 8px rgba(23, 162, 184, 0.4)";
+            onMouseOver={(e) => {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 8px rgba(40, 167, 69, 0.4)";
             }}
-            onMouseLeave={(e) => {
-              e.target.style.background = "linear-gradient(135deg, #17a2b8 0%, #138496 100%)";
+            onMouseOut={(e) => {
               e.target.style.transform = "translateY(0)";
-              e.target.style.boxShadow = "0 2px 4px rgba(23, 162, 184, 0.3)";
+              e.target.style.boxShadow = "0 2px 4px rgba(40, 167, 69, 0.3)";
             }}
           >
-            📝 Thêm hàng Note
+            ➕ THÊM CỘT
           </button>
+          
+          <button
+            onClick={() => setShowAddRowModal(true)}
+            className="btn-add-row"
+            style={{
+              background: "linear-gradient(135deg, #007bff 0%, #6610f2 100%)",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              padding: "10px 16px",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: "600",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0, 123, 255, 0.3)",
+              minWidth: "120px",
+              justifyContent: "center"
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 8px rgba(0, 123, 255, 0.4)";
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = "translateY(0)";
+              e.target.style.boxShadow = "0 2px 4px rgba(0, 123, 255, 0.3)";
+            }}
+          >
+            ➕ THÊM HÀNG
+          </button>
+          
+          <button
+            onClick={() => setShowCreateNoteModal(true)}
+            className="btn-create-note"
+            style={{
+              background: "linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%)",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              padding: "10px 16px",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: "600",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(111, 66, 193, 0.3)",
+              minWidth: "120px",
+              justifyContent: "center"
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 8px rgba(111, 66, 193, 0.4)";
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = "translateY(0)";
+              e.target.style.boxShadow = "0 2px 4px rgba(111, 66, 193, 0.3)";
+            }}
+          >
+            📝 TẠO NOTE
+          </button>
+          
           <button
             onClick={saveChanges}
             className="btn-save"
+            style={{
+              background: "linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%)",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              padding: "10px 16px",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: "600",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(111, 66, 193, 0.3)",
+              minWidth: "120px",
+              justifyContent: "center"
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 8px rgba(111, 66, 193, 0.4)";
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = "translateY(0)";
+              e.target.style.boxShadow = "0 2px 4px rgba(111, 66, 193, 0.3)";
+            }}
           >
-            💾 Lưu
+            💾 LƯU
           </button>
         </div>
       )}
@@ -262,120 +441,86 @@ export default function FreeAntivirus() {
                   isLoading={isLoading}
                 />
               ))}
-              {isAdmin && (
-                <th
-                  style={{
-                    border: "1px solid #e2e8f0",
-                    background: "#ffe08a",
-                    textAlign: "center",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Thao tác
-                </th>
-              )}
+              {isAdmin && <th style={thStyle}>Thao tác</th>}
             </tr>
           </thead>
 
           <tbody>
-            {filteredData.map((row, idx) =>
-              row.type === "note" ? (
-                <tr key={idx} className="note-row">
-                  <td
-                    colSpan={isAdmin ? 6 : 5}
-                    style={{
-                      textAlign: "center",
-                      padding: "16px",
-                    }}
-                  >
-                    {isAdmin ? (
-                      <input
-                        value={row.note || ""}
-                        onChange={(e) =>
-                          handleChange(idx, "note", e.target.value)
-                        }
-                        style={{
-                          width: "100%",
-                          border: "none",
-                          outline: "none",
-                          background: "transparent",
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          color: "#234e52",
-                          fontSize: "16px",
-                        }}
-                      />
-                    ) : (
-                      row.note
-                    )}
+            {filteredData.map((row, idx) => (
+              row?.type === 'antivirus_note_row' ? (
+                <tr key={`antivirus-row-${idx}`}>
+                  <td colSpan={columns.length + (isAdmin ? 1 : 0)} style={{
+                    background: '#fff9db',
+                    border: '1px solid #ffe08a',
+                    padding: '8px 12px',
+                    fontWeight: 500,
+                    color: '#333'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', width: '100%' }}>
+                      {isAdmin ? (
+                        <>
+                          <textarea
+                            value={row.noteContent || ''}
+                            onChange={(e) => handleChange(idx, 'noteContent', e.target.value)}
+                            placeholder="Nội dung"
+                            style={{
+                              flex: 1,
+                              border: '1px solid #ffd43b',
+                              borderRadius: 4,
+                              padding: '6px 8px',
+                              background: '#fffdf0',
+                              minHeight: 60,
+                              resize: 'vertical'
+                            }}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <span>{row.noteContent}</span>
+                        </>
+                      )}
+                      {isAdmin && (
+                        <button
+                          onClick={() => deleteRow(idx)}
+                          style={{
+                            marginLeft: 'auto',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            color: '#c92a2a',
+                            fontWeight: 700
+                          }}
+                          title="Xóa note"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
                   </td>
-                  {isAdmin && (
-                    <td className="action-cell">
-                      <button
-                        onClick={() => deleteRow(idx)}
-                        className="btn-delete"
-                      >
-                        ❌ Xóa
-                      </button>
-                    </td>
-                  )}
                 </tr>
               ) : (
-                <tr key={idx}>
+                <tr key={`antivirus-row-${idx}`}>
                   {columns.map((col) => (
-                    <td
-                      key={col.key}
-                      style={{
-                        border: "1px solid #eee",
-                        padding: "8px 10px",
-                      }}
-                    >
-                      {col.type === 'url' && col.bitOptions ? (
+                    <td key={col.key} style={tdStyle}>
+                      {col.type === 'url' ? (
                         <UrlCell
                           isAdmin={isAdmin}
                           row={row}
                           idx={idx}
-                          type="antivirus"
-                          handleChange={handleChange}
+                          type={col.key}
                           columnKey={col.key}
+                          handleChange={handleChange}
                         />
-                      ) : isAdmin ? (
-                        <input
-                          type={col.type}
-                          value={row[col.key] || ""}
-                          onChange={(e) =>
-                            handleChange(idx, col.key, e.target.value)
-                          }
-                          style={{
-                            width: "100%",
-                            border: "none",
-                            outline: "none",
-                            background: "transparent",
-                          }}
-                        />
-                      ) : row[col.key] && row[col.key].startsWith("http") ? (
-                        <a
-                          href={row[col.key]}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: "#1a73e8",
-                            textDecoration: "underline",
-                          }}
-                        >
-                          {col.key === "mainLink"
-                            ? "Link gốc"
-                            : col.key === "googleDrive"
-                            ? "Drive"
-                            : col.key === "oneDrive"
-                            ? "OneDrive"
-                            : "Link"}
-                        </a>
                       ) : (
-                        row[col.key] || "-"
+                        <EditableCell
+                          isAdmin={isAdmin}
+                          value={row[col.key]}
+                          onChange={(v) => handleChange(idx, col.key, v)}
+                        />
                       )}
                     </td>
                   ))}
+
                   {isAdmin && (
                     <td className="action-cell">
                       <button
@@ -388,10 +533,290 @@ export default function FreeAntivirus() {
                   )}
                 </tr>
               )
-            )}
+            ))}
           </tbody>
         </table>
       </div>
+
+      {/* Add Column Modal */}
+      {showAddColumnModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+            minWidth: "400px"
+          }}>
+            <h3 style={{ marginBottom: "20px", color: "#333" }}>Thêm cột mới</h3>
+            <div style={{ marginBottom: "15px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
+                Tên cột:
+              </label>
+              <input
+                type="text"
+                value={newColumnName}
+                onChange={(e) => setNewColumnName(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  fontSize: "14px"
+                }}
+                placeholder="Nhập tên cột..."
+              />
+            </div>
+            <div style={{ marginBottom: "15px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
+                Loại cột:
+              </label>
+              <select
+                value={newColumnType}
+                onChange={(e) => setNewColumnType(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  fontSize: "14px"
+                }}
+              >
+                <option value="text">Text</option>
+                <option value="url">URL</option>
+                <option value="number">Number</option>
+                <option value="date">Date</option>
+              </select>
+            </div>
+            {newColumnType === "url" && (
+              <div style={{ marginBottom: "15px" }}>
+                <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
+                  Tùy chọn bit:
+                </label>
+                <BitOptionsDropdown
+                  value={newColumnBitOption}
+                  onChange={setNewColumnBitOption}
+                />
+              </div>
+            )}
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => {
+                  setShowAddColumnModal(false);
+                  setNewColumnName("");
+                  setNewColumnType("text");
+                  setNewColumnBitOption("");
+                }}
+                style={{
+                  padding: "8px 16px",
+                  background: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Hủy
+              </button>
+                      <button
+                onClick={addColumn}
+                style={{
+                  padding: "8px 16px",
+                  background: "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Thêm cột
+                      </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Row Modal */}
+      {showAddRowModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+            minWidth: "400px"
+          }}>
+            <h3 style={{ marginBottom: "20px", color: "#333" }}>Thêm hàng mới</h3>
+            <p style={{ marginBottom: "20px", color: "#666" }}>
+              Thêm một hàng mới với các cột URL sẽ có cài đặt mặc định "Hiển cả hai".
+            </p>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setShowAddRowModal(false)}
+                style={{
+                  padding: "8px 16px",
+                  background: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={addRow}
+                      style={{
+                  padding: "8px 16px",
+                  background: "#28a745",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Thêm hàng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Note Modal */}
+      {showCreateNoteModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+            minWidth: "500px",
+            maxWidth: "600px"
+          }}>
+            <h3 style={{ marginBottom: "20px", color: "#333" }}>Tạo Note mới</h3>
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
+                Nội dung:
+              </label>
+              <textarea
+                value={noteContent}
+                onChange={(e) => setNoteContent(e.target.value)}
+                          style={{
+                            width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  minHeight: "120px",
+                  resize: "vertical"
+                }}
+                placeholder="Nhập nội dung note..."
+              />
+            </div>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => {
+                  setShowCreateNoteModal(false);
+                  setNoteTitle("");
+                  setNoteContent("");
+                }}
+                          style={{
+                  padding: "8px 16px",
+                  background: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Hủy
+              </button>
+                      <button
+                onClick={createNote}
+                style={{
+                  padding: "8px 16px",
+                  background: "#6f42c1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Tạo Note
+                      </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+const EditableCell = ({ isAdmin, value, onChange }) =>
+  isAdmin ? (
+    <input
+      value={value || ""}
+      onChange={(e) => onChange(e.target.value)}
+      style={{
+        width: "100%",
+        border: "none",
+        outline: "none",
+        background: "transparent",
+      }}
+    />
+  ) : (
+    value || "-"
+  );
+
+const thStyle = {
+  border: "1px solid #e2e8f0",
+  background: "#ffe08a",
+  color: "#000",
+  padding: "8px 12px",
+  textAlign: "left",
+  fontWeight: "bold",
+};
+const tdStyle = {
+  border: "1px solid #eee",
+  padding: "8px 10px",
+  verticalAlign: "top",
+};
+const inputStyle = {
+  width: "100%",
+  border: "1px solid #ddd",
+  borderRadius: 4,
+  padding: "4px 6px",
+};

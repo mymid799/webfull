@@ -1,12 +1,19 @@
 import mongoose from "mongoose";
 
 const toolsSchema = new mongoose.Schema({
-  toolName: { type: String, required: false },
-  mainLink: { type: String, required: false },
-  googleDrive: { type: String, required: false },
-  ownCloud: { type: String, required: false },
-  note: { type: String, required: false },
+  toolName: { type: String },
+  mainLink: { type: String },
+  googleDrive: { type: String },
+  ownCloud: { type: String },
+  note: { type: String },
+
+  // Dynamic fields for new columns
+  dynamicFields: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  }
+}, {
+  strict: false // Allow dynamic fields
 });
 
-const Tools = mongoose.model("Tools", toolsSchema);
-export default Tools;
+export default mongoose.model("Tools", toolsSchema);

@@ -1,7 +1,7 @@
 import React from "react";
 
 const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
-  const prefix = columnKey;
+  const prefix = columnKey || type;
   const showKey = `${prefix}Show`;
   const link32 = row[`${prefix}32`];
   const link64 = row[`${prefix}64`];
@@ -78,7 +78,7 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
           }}>
             <input
               type="radio"
-              name={`${prefix}Show_${idx}`}
+              name={`${prefix}Show_${idx}_${type || columnKey}`}
               value="32"
               checked={show === "32"}
               onChange={(e) => handleChange(idx, showKey, e.target.value)}
@@ -116,7 +116,7 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
           }}>
             <input
               type="radio"
-              name={`${prefix}Show_${idx}`}
+              name={`${prefix}Show_${idx}_${type || columnKey}`}
               value="64"
               checked={show === "64"}
               onChange={(e) => handleChange(idx, showKey, e.target.value)}
@@ -154,7 +154,45 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
           }}>
             <input
               type="radio"
-              name={`${prefix}Show_${idx}`}
+              name={`${prefix}Show_${idx}_${type || columnKey}`}
+              value="common"
+              checked={show === "common"}
+              onChange={(e) => handleChange(idx, showKey, e.target.value)}
+              style={{
+                margin: 0,
+                marginRight: 4,
+                marginLeft: 0,
+                transform: "scale(0.6)",
+                accentColor: "#28a745",
+                width: "12px",
+                height: "12px"
+              }}
+            />
+            <span style={{ 
+              fontSize: "10px",
+              fontWeight: show === "common" ? "700" : "500",
+              color: show === "common" ? "#28a745" : "#6c757d",
+              textShadow: show === "common" ? "0 1px 2px rgba(40,167,69,0.3)" : "none",
+              transition: "all 0.2s ease",
+              whiteSpace: "nowrap",
+              flex: 1,
+              lineHeight: "1.2"
+            }}>
+              Hiển Common
+            </span>
+          </label>
+          <label style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            cursor: "pointer",
+            margin: 0,
+            padding: "2px 0",
+            width: "100%",
+            whiteSpace: "nowrap"
+          }}>
+            <input
+              type="radio"
+              name={`${prefix}Show_${idx}_${type || columnKey}`}
               value="both"
               checked={show === "both"}
               onChange={(e) => handleChange(idx, showKey, e.target.value)}
@@ -192,7 +230,7 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
           }}>
             <input
               type="radio"
-              name={`${prefix}Show_${idx}`}
+              name={`${prefix}Show_${idx}_${type || columnKey}`}
               value="none"
               checked={show === "none"}
               onChange={(e) => handleChange(idx, showKey, e.target.value)}
@@ -241,6 +279,12 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
     return (
       <a href={link64} target="_blank" rel="noreferrer">
         64-bit
+      </a>
+    );
+  if (show === "common" && linkCommon)
+    return (
+      <a href={linkCommon} target="_blank" rel="noreferrer">
+        Download chung
       </a>
     );
   if (show === "both")

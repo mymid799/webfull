@@ -7,7 +7,18 @@ const antivirusSchema = new mongoose.Schema({
   googleDrive: String,
   oneDrive: String,
   note: String,
+
+  // Note row fields
+  noteContent: String,
+  createdAt: String,
+
+  // Dynamic fields for new columns
+  dynamicFields: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  }
+}, {
+  strict: false // Allow dynamic fields
 });
 
-const Antivirus = mongoose.model("Antivirus", antivirusSchema);
-export default Antivirus;
+export default mongoose.model("Antivirus", antivirusSchema);

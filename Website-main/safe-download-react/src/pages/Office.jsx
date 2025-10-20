@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import ColumnManager, { ColumnHeader, deleteColumn } from "../components/ColumnManager";
 import UrlCell from "../components/UrlCell";
+import AdminBitOptionsButton from "../components/AdminBitOptionsButton";
+import BitOptionsDropdown from "../components/BitOptionsDropdown";
 import "../styles/table.css";
 
 export default function Office() {
@@ -8,6 +10,13 @@ export default function Office() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Dynamic column management states
+  const [showAddColumnModal, setShowAddColumnModal] = useState(false);
+  const [showAddRowModal, setShowAddRowModal] = useState(false);
+  const [newColumnName, setNewColumnName] = useState("");
+  const [newColumnType, setNewColumnType] = useState("text");
+  const [newColumnBitOption, setNewColumnBitOption] = useState("");
   
   // Wrapper function for optimized column deletion
   const handleDeleteColumn = async (columnKey) => {
@@ -23,7 +32,8 @@ export default function Office() {
     } finally {
       setIsLoading(false);
     }
-  }; // ✅ thêm state tìm kiếm
+  };
+
   const [columns, setColumns] = useState([
     { key: "version", label: "Version", type: "text" },
     { key: "edition", label: "Edition", type: "text" },
@@ -34,50 +44,35 @@ export default function Office() {
   ]);
 
   useEffect(() => {
-    // Load dữ liệu
-    fetch("http://localhost:5000/api/office")
-      .then((res) => res.json())
-      .then((res) => setData(res))
-      .catch(() => setData([]));
-
-    // Load cấu hình cột từ database
-    const loadColumnConfig = async () => {
+    // Load dữ liệu và cấu hình cột từ database
+    const loadData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/admin/columns/office", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await fetch("http://localhost:5000/api/column-config/data/office");
+        const result = await res.json();
         
-        if (response.ok) {
-          const configData = await response.json();
-          console.log("✅ Loaded column config from database:", configData);
-          setColumns(configData);
-        } else {
-          // Fallback to localStorage
-          const configKey = `column_config_office`;
-          const savedConfig = localStorage.getItem(configKey);
+        if (res.ok && result.success) {
+          setData(result.data.data || []);
           
-          if (savedConfig) {
-            const configData = JSON.parse(savedConfig);
-            console.log("✅ Loaded column config from localStorage:", configData);
-            setColumns(configData.columns);
+          if (result.data.columnConfig && result.data.columnConfig.columns) {
+            console.log("✅ Loaded column config from database:", result.data.columnConfig);
+            setColumns(result.data.columnConfig.columns);
+            // Lưu vào localStorage để backup
+            localStorage.setItem(`column_config_office`, JSON.stringify({ columns: result.data.columnConfig.columns }));
           } else {
-            console.log("📋 No saved config found, using defaults");
-            setColumns([
-              { key: "version", label: "Version", type: "text" },
-              { key: "edition", label: "Edition", type: "text" },
-              { key: "fshare", label: "Fshare", type: "url" },
-              { key: "drive", label: "Google Drive", type: "url" },
-              { key: "oneDrive", label: "OneDrive", type: "url" },
-              { key: "sha1", label: "SHA-1", type: "text" }
-            ]);
+            // Fallback: load từ localStorage
+            loadFromLocalStorage();
           }
+        } else {
+          // Fallback: load từ localStorage
+          loadFromLocalStorage();
         }
-      } catch (err) {
-        console.warn("⚠️ Error loading column config from database, trying localStorage:", err);
-        // Fallback to localStorage
+      } catch (error) {
+        console.warn("⚠️ Error loading from database, using localStorage:", error);
+        loadFromLocalStorage();
+      }
+    };
+
+    const loadFromLocalStorage = () => {
         try {
           const configKey = `column_config_office`;
           const savedConfig = localStorage.getItem(configKey);
@@ -97,8 +92,8 @@ export default function Office() {
               { key: "sha1", label: "SHA-1", type: "text" }
             ]);
           }
-        } catch (localErr) {
-          console.warn("⚠️ Error loading column config, using defaults:", localErr);
+      } catch (err) {
+        console.warn("⚠️ Error loading column config, using defaults:", err);
           setColumns([
             { key: "version", label: "Version", type: "text" },
             { key: "edition", label: "Edition", type: "text" },
@@ -107,76 +102,144 @@ export default function Office() {
             { key: "oneDrive", label: "OneDrive", type: "url" },
             { key: "sha1", label: "SHA-1", type: "text" }
           ]);
-        }
       }
     };
-    
-    loadColumnConfig();
 
-    if (localStorage.getItem("token")) setIsAdmin(true);
+    loadData();
+
+    // Check admin status
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsAdmin(true);
+    }
   }, []);
 
+  // Add new row function
   const addRow = () => {
-    setData([
-      ...data,
-      {
-        version: "",
-        edition: "",
-        fshare32: "",
-        fshare64: "",
-        fshareCommon: "",
-        fshareShow: "both",
-        drive32: "",
-        drive64: "",
-        driveCommon: "",
-        driveShow: "both",
-        oneDrive32: "",
-        oneDrive64: "",
-        oneDriveCommon: "",
-        oneDriveShow: "both",
-        sha1: "",
-      },
-    ]);
+    // Tạo object mới với tất cả các trường cần thiết
+    const newRow = {
+      id: `office_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    };
+    
+    // Thêm các trường cơ bản
+    columns.forEach(col => {
+      if (col.type === 'url') {
+        newRow[`${col.key}32`] = "";
+        newRow[`${col.key}64`] = "";
+        newRow[`${col.key}Common`] = "";
+        newRow[`${col.key}Show`] = "both";
+      } else {
+        newRow[col.key] = "";
+      }
+    });
+
+    setData([...data, newRow]);
+    setShowAddRowModal(false);
   };
 
-  const deleteRow = (index) => {
-    const newData = [...data];
-    newData.splice(index, 1);
-    setData(newData);
+  // Add new column function
+  const addColumn = () => {
+    if (!newColumnName.trim()) return;
+    
+    const newKey = newColumnName.toLowerCase().replace(/\s+/g, '_');
+    const newColumn = {
+      key: newKey,
+      label: newColumnName,
+      type: newColumnType,
+      ...(newColumnType === "url" && newColumnBitOption && {
+        bitOption: newColumnBitOption
+      })
+    };
+    
+    setColumns([...columns, newColumn]);
+    
+    // Nếu là cột URL, thêm các trường 32-bit, 64-bit, Common và Show vào tất cả hàng hiện có
+    if (newColumnType === "url") {
+      const updatedData = data.map(row => ({
+        ...row,
+        [`${newKey}32`]: "",
+        [`${newKey}64`]: "",
+        [`${newKey}Common`]: "",
+        [`${newKey}Show`]: "both"
+      }));
+      setData(updatedData);
+    } else {
+      // Nếu không phải URL, thêm trường thông thường
+      const updatedData = data.map(row => ({
+        ...row,
+        [newKey]: ""
+      }));
+      setData(updatedData);
+    }
+    
+    setNewColumnName("");
+    setNewColumnType("text");
+    setNewColumnBitOption("");
+    setShowAddColumnModal(false);
+    
+    if (newColumnType === "url") {
+      alert(`✅ Đã thêm cột ${newColumnName} với các ô input 32-bit, 64-bit và Common!`);
+    }
   };
 
-  const handleChange = (index, key, value) => {
-    const updated = [...data];
-    updated[index][key] = value;
-    setData(updated);
-  };
-
+  // Save changes function
   const saveChanges = async () => {
     const token = localStorage.getItem("token");
     if (!token) return alert("🔒 Bạn cần đăng nhập admin!");
 
     try {
-      const res = await fetch("http://localhost:5000/api/office/save", {
+      // Lưu cấu hình cột và dữ liệu
+      const res = await fetch("http://localhost:5000/api/column-config/data/save", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          category: "office",
+          data: data,
+          columnConfig: {
+            columns: columns
+          }
+        }),
       });
 
       const result = await res.json();
-      if (res.ok) alert(result.message || "✅ Dữ liệu đã lưu!");
-      else alert(result.message || "❌ Lưu thất bại!");
-    } catch {
+      if (res.ok) {
+        alert(result.message || "✅ Dữ liệu và cấu hình cột đã lưu!");
+        // Lưu cấu hình cột vào localStorage
+        localStorage.setItem(`column_config_office`, JSON.stringify({ columns }));
+      } else {
+        alert(result.message || "❌ Lưu thất bại!");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
       alert("⚠️ Lỗi khi gửi dữ liệu!");
     }
   };
 
-  // ✅ Lọc dữ liệu theo từ khóa tìm kiếm
+  // Handle cell changes
+  const handleChange = (idx, field, value) => {
+    const newData = [...data];
+    if (newData[idx]) {
+      newData[idx][field] = value;
+      setData(newData);
+    }
+  };
+
+  // Delete row function
+  const deleteRow = (idx) => {
+    const newData = data.filter((_, i) => i !== idx);
+    setData(newData);
+  };
+
+  // Filter data based on search term
   const filteredData = data.filter((row) =>
-    Object.values(row).join(" ").toLowerCase().includes(searchTerm)
+    Object.values(row).some((value) =>
+      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
+
 
   return (
     <div style={{ padding: "20px 40px" }}>
@@ -197,25 +260,107 @@ export default function Office() {
 
       {isAdmin && (
         <div className="control-buttons">
-          <ColumnManager 
-            columns={columns}
-            setColumns={setColumns}
-            data={data}
-            setData={setData}
-            isAdmin={isAdmin}
-            category="office"
+          <AdminBitOptionsButton 
+            onOptionSelect={(option) => {
+              console.log('Selected bit option:', option);
+              alert(`Đã chọn: ${option.label}\nMô tả: ${option.description}`);
+            }}
           />
+          
           <button
-            onClick={addRow}
-            className="btn-add"
+            onClick={() => setShowAddColumnModal(true)}
+            className="btn-add-column"
+            style={{
+              background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              padding: "10px 16px",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: "600",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(40, 167, 69, 0.3)",
+              minWidth: "120px",
+              justifyContent: "center"
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 8px rgba(40, 167, 69, 0.4)";
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = "translateY(0)";
+              e.target.style.boxShadow = "0 2px 4px rgba(40, 167, 69, 0.3)";
+            }}
           >
-            ➕ Thêm hàng
+            ➕ THÊM CỘT
           </button>
+          
+          <button
+            onClick={() => setShowAddRowModal(true)}
+            className="btn-add-row"
+            style={{
+              background: "linear-gradient(135deg, #007bff 0%, #6610f2 100%)",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              padding: "10px 16px",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: "600",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0, 123, 255, 0.3)",
+              minWidth: "120px",
+              justifyContent: "center"
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 8px rgba(0, 123, 255, 0.4)";
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = "translateY(0)";
+              e.target.style.boxShadow = "0 2px 4px rgba(0, 123, 255, 0.3)";
+            }}
+          >
+            ➕ THÊM HÀNG
+          </button>
+          
           <button
             onClick={saveChanges}
             className="btn-save"
+            style={{
+              background: "linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%)",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              padding: "10px 16px",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: "600",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(111, 66, 193, 0.3)",
+              minWidth: "120px",
+              justifyContent: "center"
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 8px rgba(111, 66, 193, 0.4)";
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = "translateY(0)";
+              e.target.style.boxShadow = "0 2px 4px rgba(111, 66, 193, 0.3)";
+            }}
           >
-            💾 Lưu
+            💾 LƯU
           </button>
         </div>
       )}
@@ -239,25 +384,17 @@ export default function Office() {
 
           <tbody>
             {filteredData.map((row, idx) => (
-              <tr key={idx}>
+              <tr key={`office-row-${idx}-${row.id || idx}`}>
                 {columns.map((col) => (
                   <td key={col.key} style={tdStyle}>
-                    {col.key === "fshare" || col.key === "drive" || col.key === "oneDrive" ? (
-                      <LinkCell
-                        isAdmin={isAdmin}
-                        row={row}
-                        idx={idx}
-                        type={col.key}
-                        handleChange={handleChange}
-                      />
-                    ) : col.type === 'url' && col.bitOptions ? (
+                    {col.type === 'url' ? (
                       <UrlCell
                         isAdmin={isAdmin}
                         row={row}
                         idx={idx}
-                        type="office"
-                        handleChange={handleChange}
+                        type={col.key}
                         columnKey={col.key}
+                        handleChange={handleChange}
                       />
                     ) : (
                       <EditableCell
@@ -284,9 +421,175 @@ export default function Office() {
           </tbody>
         </table>
       </div>
-    </div>
-  );
-}
+
+      {/* Add Column Modal */}
+      {showAddColumnModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+            minWidth: "400px"
+          }}>
+            <h3 style={{ marginBottom: "20px", color: "#333" }}>Thêm cột mới</h3>
+            <div style={{ marginBottom: "15px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
+                Tên cột:
+              </label>
+    <input
+                type="text"
+                value={newColumnName}
+                onChange={(e) => setNewColumnName(e.target.value)}
+      style={{
+        width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  fontSize: "14px"
+                }}
+                placeholder="Nhập tên cột..."
+              />
+            </div>
+            <div style={{ marginBottom: "15px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
+                Loại cột:
+              </label>
+              <select
+                value={newColumnType}
+                onChange={(e) => setNewColumnType(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  fontSize: "14px"
+                }}
+              >
+                <option value="text">Text</option>
+                <option value="url">URL</option>
+                <option value="number">Number</option>
+                <option value="date">Date</option>
+              </select>
+            </div>
+            {newColumnType === "url" && (
+              <div style={{ marginBottom: "15px" }}>
+                <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
+                  Tùy chọn bit:
+                </label>
+                <BitOptionsDropdown
+                  value={newColumnBitOption}
+                  onChange={setNewColumnBitOption}
+                />
+              </div>
+            )}
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => {
+                  setShowAddColumnModal(false);
+                  setNewColumnName("");
+                  setNewColumnType("text");
+                  setNewColumnBitOption("");
+                }}
+                style={{
+                  padding: "8px 16px",
+                  background: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={addColumn}
+                style={{
+                  padding: "8px 16px",
+                  background: "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Thêm cột
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Row Modal */}
+      {showAddRowModal && (
+        <div style={{ 
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex", 
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+            minWidth: "400px"
+          }}>
+            <h3 style={{ marginBottom: "20px", color: "#333" }}>Thêm hàng mới</h3>
+            <p style={{ marginBottom: "20px", color: "#666" }}>
+              Thêm một hàng mới với các cột URL sẽ có cài đặt mặc định "Hiển cả hai".
+            </p>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setShowAddRowModal(false)}
+                style={{
+                  padding: "8px 16px",
+                  background: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={addRow}
+                style={{
+                  padding: "8px 16px",
+                  background: "#28a745",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Thêm hàng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
+    );
+  }
 
 const EditableCell = ({ isAdmin, value, onChange }) =>
   isAdmin ? (
@@ -303,272 +606,6 @@ const EditableCell = ({ isAdmin, value, onChange }) =>
   ) : (
     value || "-"
   );
-
-const LinkCell = ({ isAdmin, row, idx, type, handleChange }) => {
-  const prefix = type;
-  const showKey = `${prefix}Show`;
-  const link32 = row[`${prefix}32`];
-  const link64 = row[`${prefix}64`];
-  const linkCommon = row[`${prefix}Common`];
-  const show = row[showKey];
-
-  if (isAdmin) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <div style={{ display: "flex", gap: 6 }}>
-          <input
-            placeholder="32-bit"
-            value={link32 || ""}
-            onChange={(e) => handleChange(idx, `${prefix}32`, e.target.value)}
-            style={{ ...inputStyle, flex: 1 }}
-          />
-          <input
-            placeholder="64-bit"
-            value={link64 || ""}
-            onChange={(e) => handleChange(idx, `${prefix}64`, e.target.value)}
-            style={{ ...inputStyle, flex: 1 }}
-          />
-        </div>
-        <input
-          placeholder="Download chung"
-          value={linkCommon || ""}
-          onChange={(e) => handleChange(idx, `${prefix}Common`, e.target.value)}
-          style={{ ...inputStyle, marginTop: 4 }}
-        />
-
-        {/* radio chọn hiển thị */}
-        <div style={{ 
-          fontSize: 10, 
-          display: "flex", 
-          flexDirection: "column", 
-          gap: 0,
-          marginTop: 4,
-          padding: "4px 4px 4px 0",
-          margin: 0,
-          width: "100%",
-          background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
-          borderRadius: "4px",
-          border: "1px solid #dee2e6",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
-        }}>
-          <label style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            cursor: "pointer",
-            margin: 0,
-            padding: "2px 0",
-            width: "100%",
-            whiteSpace: "nowrap"
-          }}>
-            <input
-              type="radio"
-              name={`${prefix}Show-${idx}`}
-              value="32"
-              checked={show === "32"}
-              onChange={() => handleChange(idx, showKey, "32")}
-              style={{
-                margin: 0,
-                marginRight: 4,
-                marginLeft: 0,
-                transform: "scale(0.6)",
-                accentColor: "#007bff",
-                width: "12px",
-                height: "12px"
-              }}
-            />
-            <span style={{ 
-              fontSize: "10px",
-              fontWeight: show === "32" ? "700" : "500",
-              color: show === "32" ? "#007bff" : "#6c757d",
-              textShadow: show === "32" ? "0 1px 2px rgba(0,123,255,0.3)" : "none",
-              transition: "all 0.2s ease",
-              whiteSpace: "nowrap",
-              flex: 1,
-              lineHeight: "1.2"
-            }}>
-              Hiển 32-bit
-            </span>
-          </label>
-          <label style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            cursor: "pointer",
-            margin: 0,
-            padding: "2px 0",
-            width: "100%",
-            whiteSpace: "nowrap"
-          }}>
-            <input
-              type="radio"
-              name={`${prefix}Show-${idx}`}
-              value="64"
-              checked={show === "64"}
-              onChange={() => handleChange(idx, showKey, "64")}
-              style={{
-                margin: 0,
-                marginRight: 4,
-                marginLeft: 0,
-                transform: "scale(0.6)",
-                accentColor: "#007bff",
-                width: "12px",
-                height: "12px"
-              }}
-            />
-            <span style={{ 
-              fontSize: "10px",
-              fontWeight: show === "64" ? "700" : "500",
-              color: show === "64" ? "#007bff" : "#6c757d",
-              textShadow: show === "64" ? "0 1px 2px rgba(0,123,255,0.3)" : "none",
-              transition: "all 0.2s ease",
-              whiteSpace: "nowrap",
-              flex: 1,
-              lineHeight: "1.2"
-            }}>
-              Hiển 64-bit
-            </span>
-          </label>
-          <label style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            cursor: "pointer",
-            margin: 0,
-            padding: "2px 0",
-            width: "100%",
-            whiteSpace: "nowrap"
-          }}>
-            <input
-              type="radio"
-              name={`${prefix}Show-${idx}`}
-              value="common"
-              checked={show === "common"}
-              onChange={() => handleChange(idx, showKey, "common")}
-              style={{
-                margin: 0,
-                marginRight: 4,
-                marginLeft: 0,
-                transform: "scale(0.6)",
-                accentColor: "#28a745",
-                width: "12px",
-                height: "12px"
-              }}
-            />
-            <span style={{ 
-              fontSize: "10px",
-              fontWeight: show === "common" ? "700" : "500",
-              color: show === "common" ? "#28a745" : "#6c757d",
-              textShadow: show === "common" ? "0 1px 2px rgba(40,167,69,0.3)" : "none",
-              transition: "all 0.2s ease",
-              whiteSpace: "nowrap",
-              flex: 1,
-              lineHeight: "1.2"
-            }}>
-              Download chung
-            </span>
-          </label>
-          <label style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            cursor: "pointer",
-            margin: 0,
-            padding: "2px 0",
-            width: "100%",
-            whiteSpace: "nowrap"
-          }}>
-            <input
-              type="radio"
-              name={`${prefix}Show-${idx}`}
-              value="both"
-              checked={show === "both"}
-              onChange={() => handleChange(idx, showKey, "both")}
-              style={{
-                margin: 0,
-                marginRight: 4,
-                marginLeft: 0,
-                transform: "scale(0.6)",
-                accentColor: "#007bff",
-                width: "12px",
-                height: "12px"
-              }}
-            />
-            <span style={{ 
-              fontSize: "13px",
-              fontWeight: show === "both" ? "600" : "400",
-              color: show === "both" ? "#007bff" : "#495057"
-            }}>
-              Hiển cả hai
-            </span>
-          </label>
-          <label style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            cursor: "pointer",
-            margin: 0,
-            padding: "2px 0",
-            width: "100%",
-            whiteSpace: "nowrap"
-          }}>
-            <input
-              type="radio"
-              name={`${prefix}Show-${idx}`}
-              value="none"
-              checked={show === "none"}
-              onChange={() => handleChange(idx, showKey, "none")}
-              style={{
-                margin: 0,
-                marginRight: 4,
-                marginLeft: 0,
-                transform: "scale(0.6)",
-                accentColor: "#dc3545",
-                width: "12px",
-                height: "12px"
-              }}
-            />
-            <span style={{ 
-              fontSize: "10px",
-              fontWeight: show === "none" ? "700" : "500",
-              color: show === "none" ? "#dc3545" : "#6c757d",
-              textShadow: show === "none" ? "0 1px 2px rgba(220,53,69,0.3)" : "none",
-              transition: "all 0.2s ease",
-              whiteSpace: "nowrap",
-              flex: 1,
-              lineHeight: "1.2"
-            }}>
-              Ẩn
-            </span>
-          </label>
-        </div>
-      </div>
-    );
-  }
-
-  if (show === "none") return "-";
-
-  const links = [];
-  if ((show === "32" || show === "both") && link32)
-    links.push({ url: link32, label: getLabel(prefix, "32") });
-  if ((show === "64" || show === "both") && link64)
-    links.push({ url: link64, label: getLabel(prefix, "64") });
-  if (show === "common" && linkCommon)
-    links.push({ url: linkCommon, label: getLabel(prefix, "Download chung") });
-
-  if (links.length === 0) return "-";
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      {links.map((l, i) => (
-        <a key={i} href={l.url} target="_blank" rel="noreferrer">
-          {l.label}
-        </a>
-      ))}
-    </div>
-  );
-};
-
-const getLabel = (prefix, type) => {
-  if (type === "Download chung")
-    return "Download chung";
-  return `${type}-bit`;
-};
 
 const thStyle = {
   border: "1px solid #e2e8f0",

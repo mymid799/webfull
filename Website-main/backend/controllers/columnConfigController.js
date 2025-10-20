@@ -4,6 +4,22 @@ import Office from '../models/Office.js';
 import Tools from '../models/Tools.js';
 import Antivirus from '../models/Antivirus.js';
 
+// Helper to get the correct model based on category
+const getModelByCategory = (category) => {
+    switch (category) {
+        case 'windows':
+            return Windows;
+        case 'office':
+            return Office;
+        case 'tools':
+            return Tools;
+        case 'antivirus':
+            return Antivirus;
+        default:
+            throw new Error('Invalid category');
+    }
+};
+
 /**
  * Lưu cấu hình cột
  * POST /api/column-config
@@ -109,6 +125,10 @@ export const saveDataWithConfig = async (req, res) => {
     try {
         const { category, data, columnConfig } = req.body;
 
+        console.log(`💾 Saving data for category: ${category}`);
+        console.log(`💾 Data to save:`, JSON.stringify(data, null, 2));
+        console.log(`💾 Column config:`, JSON.stringify(columnConfig, null, 2));
+
         if (!category || !Array.isArray(data)) {
             return res.status(400).json({
                 success: false,
@@ -118,36 +138,40 @@ export const saveDataWithConfig = async (req, res) => {
 
         // Lưu cấu hình cột nếu có
         if (columnConfig && Array.isArray(columnConfig.columns)) {
-            await saveColumnConfig({ body: { category, columns: columnConfig.columns } }, res);
+            console.log(`💾 Saving column config for ${category}...`);
+            await ColumnConfig.findOneAndUpdate(
+                { category },
+                { category, columns: columnConfig.columns },
+                { upsert: true, new: true }
+            );
+            console.log(`✅ Column config saved for ${category}`);
         }
 
         // Lưu dữ liệu
-        let Model;
-        switch (category) {
-            case 'windows':
-                Model = Windows;
-                break;
-            case 'office':
-                Model = Office;
-                break;
-            case 'tools':
-                Model = Tools;
-                break;
-            case 'antivirus':
-                Model = Antivirus;
-                break;
-            default:
-                return res.status(400).json({
-                    success: false,
-                    message: 'Category không hợp lệ'
-                });
-        }
+        const Model = getModelByCategory(category);
+        console.log(`💾 Using model: ${Model.modelName}`);
 
         // Xóa dữ liệu cũ
-        await Model.deleteMany({});
+        const deleteResult = await Model.deleteMany({});
+        console.log(`🗑️ Deleted ${deleteResult.deletedCount} old records`);
 
         // Lưu dữ liệu mới
-        await Model.insertMany(data);
+        if (data.length > 0) {
+            // Loại bỏ các trường id/_id không hợp lệ trước khi insert
+            const cleanData = data.map(row => {
+                const cleanRow = { ...row };
+                delete cleanRow.id;
+                delete cleanRow._id;
+                return cleanRow;
+            });
+
+            console.log(`💾 Clean data to insert:`, JSON.stringify(cleanData, null, 2));
+
+            const insertResult = await Model.insertMany(cleanData);
+            console.log(`✅ Inserted ${insertResult.length} new records`);
+        } else {
+            console.log(`⚠️ No data to insert`);
+        }
 
         res.json({
             success: true,
@@ -170,33 +194,18 @@ export const saveDataWithConfig = async (req, res) => {
 export const getDataWithConfig = async (req, res) => {
     try {
         const { category } = req.params;
+        console.log(`📥 Getting data for category: ${category}`);
 
         // Lấy cấu hình cột
         const config = await ColumnConfig.findOne({ category });
+        console.log(`📥 Column config for ${category}:`, config);
 
         // Lấy dữ liệu
-        let Model;
-        switch (category) {
-            case 'windows':
-                Model = Windows;
-                break;
-            case 'office':
-                Model = Office;
-                break;
-            case 'tools':
-                Model = Tools;
-                break;
-            case 'antivirus':
-                Model = Antivirus;
-                break;
-            default:
-                return res.status(400).json({
-                    success: false,
-                    message: 'Category không hợp lệ'
-                });
-        }
+        const Model = getModelByCategory(category);
+        console.log(`📥 Using model for ${category}:`, Model.modelName);
 
         const data = await Model.find({});
+        console.log(`📥 Found ${data.length} records for ${category}:`, data);
 
         res.json({
             success: true,

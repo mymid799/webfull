@@ -3,8 +3,9 @@ import mongoose from "mongoose";
 const officeSchema = new mongoose.Schema({
   version: { type: String },
   edition: { type: String },
+  sha1: { type: String },
 
-  // Fshare
+  // Fshare links (legacy support)
   fshare32: { type: String },
   fshare64: { type: String },
   fshareCommon: { type: String },
@@ -14,7 +15,7 @@ const officeSchema = new mongoose.Schema({
     default: "both",
   },
 
-  // Google Drive
+  // Google Drive links (legacy support)
   drive32: { type: String },
   drive64: { type: String },
   driveCommon: { type: String },
@@ -24,7 +25,7 @@ const officeSchema = new mongoose.Schema({
     default: "both",
   },
 
-  // OneDrive
+  // OneDrive links (legacy support)
   oneDrive32: { type: String },
   oneDrive64: { type: String },
   oneDriveCommon: { type: String },
@@ -34,7 +35,13 @@ const officeSchema = new mongoose.Schema({
     default: "both",
   },
 
-  sha1: { type: String },
+  // Dynamic fields for new columns
+  dynamicFields: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  }
+}, {
+  strict: false // Allow dynamic fields
 });
 
 export default mongoose.model("Office", officeSchema);
