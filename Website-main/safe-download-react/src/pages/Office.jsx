@@ -338,61 +338,203 @@ const LinkCell = ({ isAdmin, row, idx, type, handleChange }) => {
 
         {/* radio chọn hiển thị */}
         <div style={{ 
-          fontSize: 13, 
+          fontSize: 10, 
           display: "flex", 
           flexDirection: "column", 
-          gap: 4,
-          marginTop: 4
+          gap: 0,
+          marginTop: 4,
+          padding: "4px 4px 4px 0",
+          margin: 0,
+          width: "100%",
+          background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+          borderRadius: "4px",
+          border: "1px solid #dee2e6",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
         }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <label style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            cursor: "pointer",
+            margin: 0,
+            padding: "2px 0",
+            width: "100%",
+            whiteSpace: "nowrap"
+          }}>
             <input
               type="radio"
               name={`${prefix}Show-${idx}`}
               value="32"
               checked={show === "32"}
               onChange={() => handleChange(idx, showKey, "32")}
+              style={{
+                margin: 0,
+                marginRight: 4,
+                marginLeft: 0,
+                transform: "scale(0.6)",
+                accentColor: "#007bff",
+                width: "12px",
+                height: "12px"
+              }}
             />
-            Hiển 32-bit
+            <span style={{ 
+              fontSize: "10px",
+              fontWeight: show === "32" ? "700" : "500",
+              color: show === "32" ? "#007bff" : "#6c757d",
+              textShadow: show === "32" ? "0 1px 2px rgba(0,123,255,0.3)" : "none",
+              transition: "all 0.2s ease",
+              whiteSpace: "nowrap",
+              flex: 1,
+              lineHeight: "1.2"
+            }}>
+              Hiển 32-bit
+            </span>
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <label style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            cursor: "pointer",
+            margin: 0,
+            padding: "2px 0",
+            width: "100%",
+            whiteSpace: "nowrap"
+          }}>
             <input
               type="radio"
               name={`${prefix}Show-${idx}`}
               value="64"
               checked={show === "64"}
               onChange={() => handleChange(idx, showKey, "64")}
+              style={{
+                margin: 0,
+                marginRight: 4,
+                marginLeft: 0,
+                transform: "scale(0.6)",
+                accentColor: "#007bff",
+                width: "12px",
+                height: "12px"
+              }}
             />
-            Hiển 64-bit
+            <span style={{ 
+              fontSize: "10px",
+              fontWeight: show === "64" ? "700" : "500",
+              color: show === "64" ? "#007bff" : "#6c757d",
+              textShadow: show === "64" ? "0 1px 2px rgba(0,123,255,0.3)" : "none",
+              transition: "all 0.2s ease",
+              whiteSpace: "nowrap",
+              flex: 1,
+              lineHeight: "1.2"
+            }}>
+              Hiển 64-bit
+            </span>
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <label style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            cursor: "pointer",
+            margin: 0,
+            padding: "2px 0",
+            width: "100%",
+            whiteSpace: "nowrap"
+          }}>
             <input
               type="radio"
               name={`${prefix}Show-${idx}`}
               value="common"
               checked={show === "common"}
               onChange={() => handleChange(idx, showKey, "common")}
+              style={{
+                margin: 0,
+                marginRight: 4,
+                marginLeft: 0,
+                transform: "scale(0.6)",
+                accentColor: "#28a745",
+                width: "12px",
+                height: "12px"
+              }}
             />
-            Download chung
+            <span style={{ 
+              fontSize: "10px",
+              fontWeight: show === "common" ? "700" : "500",
+              color: show === "common" ? "#28a745" : "#6c757d",
+              textShadow: show === "common" ? "0 1px 2px rgba(40,167,69,0.3)" : "none",
+              transition: "all 0.2s ease",
+              whiteSpace: "nowrap",
+              flex: 1,
+              lineHeight: "1.2"
+            }}>
+              Download chung
+            </span>
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <label style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            cursor: "pointer",
+            margin: 0,
+            padding: "2px 0",
+            width: "100%",
+            whiteSpace: "nowrap"
+          }}>
             <input
               type="radio"
               name={`${prefix}Show-${idx}`}
               value="both"
               checked={show === "both"}
               onChange={() => handleChange(idx, showKey, "both")}
+              style={{
+                margin: 0,
+                marginRight: 4,
+                marginLeft: 0,
+                transform: "scale(0.6)",
+                accentColor: "#007bff",
+                width: "12px",
+                height: "12px"
+              }}
             />
-            Hiển cả hai
+            <span style={{ 
+              fontSize: "13px",
+              fontWeight: show === "both" ? "600" : "400",
+              color: show === "both" ? "#007bff" : "#495057"
+            }}>
+              Hiển cả hai
+            </span>
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <label style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            cursor: "pointer",
+            margin: 0,
+            padding: "2px 0",
+            width: "100%",
+            whiteSpace: "nowrap"
+          }}>
             <input
               type="radio"
               name={`${prefix}Show-${idx}`}
               value="none"
               checked={show === "none"}
               onChange={() => handleChange(idx, showKey, "none")}
+              style={{
+                margin: 0,
+                marginRight: 4,
+                marginLeft: 0,
+                transform: "scale(0.6)",
+                accentColor: "#dc3545",
+                width: "12px",
+                height: "12px"
+              }}
             />
-            Ẩn
+            <span style={{ 
+              fontSize: "10px",
+              fontWeight: show === "none" ? "700" : "500",
+              color: show === "none" ? "#dc3545" : "#6c757d",
+              textShadow: show === "none" ? "0 1px 2px rgba(220,53,69,0.3)" : "none",
+              transition: "all 0.2s ease",
+              whiteSpace: "nowrap",
+              flex: 1,
+              lineHeight: "1.2"
+            }}>
+              Ẩn
+            </span>
           </label>
         </div>
       </div>

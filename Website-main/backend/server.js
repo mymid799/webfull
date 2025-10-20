@@ -13,6 +13,8 @@ import antivirusRoutes from "./routes/antivirusRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import adminInfoRoutes from "./routes/adminInfoRoutes.js";
 import virustotalRoutes from "./routes/virustotalRoutes.js";
+import dynamicColumnRoutes from "./routes/dynamicColumnRoutes.js";
+import columnConfigRoutes from "./routes/columnConfigRoutes.js";
 
 dotenv.config();
 
@@ -33,6 +35,8 @@ app.use("/api/antivirus", antivirusRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/admin-info", adminInfoRoutes);
 app.use("/api/virustotal", virustotalRoutes);
+app.use("/api/dynamic-columns", dynamicColumnRoutes);
+app.use("/api/column-config", columnConfigRoutes);
 
 // ⚙️ Kết nối MongoDB
 mongoose

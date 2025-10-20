@@ -133,10 +133,7 @@ export default function ColumnManager({
 
   // Xóa cột - Optimized version
   const _deleteColumn = async (columnKey) => {
-    if (columns.length <= 1) {
-      alert("Không thể xóa cột cuối cùng!");
-      return;
-    }
+    // Cho phép xóa cột cuối cùng vì đây là bảng động giống Excel
     
     if (!confirm(`Bạn có chắc chắn muốn xóa cột "${columnKey}"? Hành động này không thể hoàn tác.`)) {
       return;
@@ -374,10 +371,7 @@ export default function ColumnManager({
 
 // Export delete function for use in other components
 export const deleteColumn = async (columnKey, { columns, setColumns, data, setData, category }) => {
-  if (columns.length <= 1) {
-    alert("Không thể xóa cột cuối cùng!");
-    return;
-  }
+  // Cho phép xóa cột cuối cùng vì đây là bảng động giống Excel
   
   if (!confirm(`Bạn có chắc chắn muốn xóa cột "${columnKey}"? Hành động này không thể hoàn tác.`)) {
     return;

@@ -53,50 +53,171 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
         />
 
         {/* Radio buttons for display option */}
-        <div style={{ fontSize: 13 }}>
-          <label>
+        <div style={{ 
+          fontSize: 10,
+          display: "flex",
+          flexDirection: "column",
+          gap: 0,
+          marginTop: 4,
+          padding: "4px 4px 4px 0",
+          margin: 0,
+          width: "100%",
+          background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+          borderRadius: "4px",
+          border: "1px solid #dee2e6",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+        }}>
+          <label style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            cursor: "pointer",
+            margin: 0,
+            padding: "2px 0",
+            width: "100%",
+            whiteSpace: "nowrap"
+          }}>
             <input
               type="radio"
               name={`${prefix}Show_${idx}`}
               value="32"
               checked={show === "32"}
               onChange={(e) => handleChange(idx, showKey, e.target.value)}
-              style={{ marginRight: 4 }}
+              style={{
+                margin: 0,
+                marginRight: 4,
+                marginLeft: 0,
+                transform: "scale(0.6)",
+                accentColor: "#007bff",
+                width: "12px",
+                height: "12px"
+              }}
             />
-            32-bit
+            <span style={{ 
+              fontSize: "10px",
+              fontWeight: show === "32" ? "700" : "500",
+              color: show === "32" ? "#007bff" : "#6c757d",
+              textShadow: show === "32" ? "0 1px 2px rgba(0,123,255,0.3)" : "none",
+              transition: "all 0.2s ease",
+              whiteSpace: "nowrap",
+              flex: 1,
+              lineHeight: "1.2"
+            }}>
+              Hiển 32-bit
+            </span>
           </label>
-          <label style={{ marginLeft: 8 }}>
+          <label style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            cursor: "pointer",
+            margin: 0,
+            padding: "2px 0",
+            width: "100%",
+            whiteSpace: "nowrap"
+          }}>
             <input
               type="radio"
               name={`${prefix}Show_${idx}`}
               value="64"
               checked={show === "64"}
               onChange={(e) => handleChange(idx, showKey, e.target.value)}
-              style={{ marginRight: 4 }}
+              style={{
+                margin: 0,
+                marginRight: 4,
+                marginLeft: 0,
+                transform: "scale(0.6)",
+                accentColor: "#007bff",
+                width: "12px",
+                height: "12px"
+              }}
             />
-            64-bit
+            <span style={{ 
+              fontSize: "10px",
+              fontWeight: show === "64" ? "700" : "500",
+              color: show === "64" ? "#007bff" : "#6c757d",
+              textShadow: show === "64" ? "0 1px 2px rgba(0,123,255,0.3)" : "none",
+              transition: "all 0.2s ease",
+              whiteSpace: "nowrap",
+              flex: 1,
+              lineHeight: "1.2"
+            }}>
+              Hiển 64-bit
+            </span>
           </label>
-          <label style={{ marginLeft: 8 }}>
+          <label style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            cursor: "pointer",
+            margin: 0,
+            padding: "2px 0",
+            width: "100%",
+            whiteSpace: "nowrap"
+          }}>
             <input
               type="radio"
               name={`${prefix}Show_${idx}`}
               value="both"
               checked={show === "both"}
               onChange={(e) => handleChange(idx, showKey, e.target.value)}
-              style={{ marginRight: 4 }}
+              style={{
+                margin: 0,
+                marginRight: 4,
+                marginLeft: 0,
+                transform: "scale(0.6)",
+                accentColor: "#007bff",
+                width: "12px",
+                height: "12px"
+              }}
             />
-            Both
+            <span style={{ 
+              fontSize: "10px",
+              fontWeight: show === "both" ? "700" : "500",
+              color: show === "both" ? "#007bff" : "#6c757d",
+              textShadow: show === "both" ? "0 1px 2px rgba(0,123,255,0.3)" : "none",
+              transition: "all 0.2s ease",
+              whiteSpace: "nowrap",
+              flex: 1,
+              lineHeight: "1.2"
+            }}>
+              Hiển cả hai
+            </span>
           </label>
-          <label style={{ marginLeft: 8 }}>
+          <label style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            cursor: "pointer",
+            margin: 0,
+            padding: "2px 0",
+            width: "100%",
+            whiteSpace: "nowrap"
+          }}>
             <input
               type="radio"
               name={`${prefix}Show_${idx}`}
               value="none"
               checked={show === "none"}
               onChange={(e) => handleChange(idx, showKey, e.target.value)}
-              style={{ marginRight: 4 }}
+              style={{
+                margin: 0,
+                marginRight: 4,
+                marginLeft: 0,
+                transform: "scale(0.6)",
+                accentColor: "#dc3545",
+                width: "12px",
+                height: "12px"
+              }}
             />
-            None
+            <span style={{ 
+              fontSize: "10px",
+              fontWeight: show === "none" ? "700" : "500",
+              color: show === "none" ? "#dc3545" : "#6c757d",
+              textShadow: show === "none" ? "0 1px 2px rgba(220,53,69,0.3)" : "none",
+              transition: "all 0.2s ease",
+              whiteSpace: "nowrap",
+              flex: 1,
+              lineHeight: "1.2"
+            }}>
+              Ẩn
+            </span>
           </label>
         </div>
       </div>
