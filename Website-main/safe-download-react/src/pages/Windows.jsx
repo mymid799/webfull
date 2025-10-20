@@ -31,6 +31,19 @@ export default function Windows() {
       setIsLoading(false);
     }
   };
+
+  // Handle column label editing
+  const handleEditColumn = (columnKey, newLabel) => {
+    const updatedColumns = columns.map(col => 
+      col.key === columnKey ? { ...col, label: newLabel } : col
+    );
+    setColumns(updatedColumns);
+    
+    // Save to localStorage as backup
+    localStorage.setItem(`column_config_windows`, JSON.stringify({ columns: updatedColumns }));
+    
+    console.log(`✅ Column "${columnKey}" renamed to "${newLabel}"`);
+  };
   
   const [columns, setColumns] = useState([
     { key: "version", label: "Version", type: "text" },
@@ -313,6 +326,7 @@ export default function Windows() {
                   key={col.key}
                   column={col}
                   onDelete={handleDeleteColumn}
+                  onEdit={handleEditColumn}
                   isAdmin={isAdmin}
                   isLoading={isLoading}
                 />

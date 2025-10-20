@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function ColumnManager({ 
   columns, 
@@ -480,24 +480,147 @@ export const deleteColumn = async (columnKey, { columns, setColumns, data, setDa
   }
 };
 
-// Component để render header với nút xóa cột
-export function ColumnHeader({ column, onDelete, isAdmin, isLoading }) {
+// Component để render header với 2 nút riêng biệt
+export function ColumnHeader({ column, onDelete, onEdit, isAdmin, isLoading }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(column.label);
+
+  // Reset editValue when column.label changes
+  useEffect(() => {
+    setEditValue(column.label);
+  }, [column.label]);
+
+  const handleEdit = () => {
+    if (isEditing && editValue.trim() && editValue !== column.label) {
+      onEdit(column.key, editValue.trim());
+    }
+    setIsEditing(!isEditing);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleEdit();
+    } else if (e.key === 'Escape') {
+      setEditValue(column.label);
+      setIsEditing(false);
+    }
+  };
+
   return (
-    <th className="column-header">
-      {column.label}
-      {isAdmin && (
-        <button
-          onClick={() => onDelete(column.key)}
-          disabled={isLoading}
-          className="column-delete-btn"
-          title={isLoading ? "Đang xử lý..." : "Xóa cột"}
+    <th className="column-header" style={{ position: 'relative' }}>
+      {isEditing ? (
+        <input
+          type="text"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={handleKeyPress}
+          onBlur={handleEdit}
+          autoFocus
           style={{
-            opacity: isLoading ? 0.5 : 1,
-            cursor: isLoading ? "not-allowed" : "pointer"
+            width: '100%',
+            padding: '4px 8px',
+            border: '2px solid #007bff',
+            borderRadius: '4px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            outline: 'none',
+            background: '#fff'
           }}
-        >
-          {isLoading ? "⏳" : "✕"}
-        </button>
+        />
+      ) : (
+        <span style={{ display: 'block', paddingRight: '80px' }}>
+          {column.label}
+        </span>
+      )}
+      
+      {isAdmin && (
+        <div style={{ 
+          position: 'absolute', 
+          top: '50%', 
+          right: '8px', 
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: '8px',
+          zIndex: 10
+        }}>
+          <button
+            onClick={handleEdit}
+            disabled={isLoading}
+            className="column-edit-btn"
+            title={isEditing ? "Lưu thay đổi" : "Chỉnh sửa tên cột"}
+            style={{
+              width: '28px',
+              height: '28px',
+              border: 'none',
+              borderRadius: '6px',
+              background: isEditing ? '#28a745' : '#007bff',
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              transition: 'all 0.2s ease',
+              opacity: isLoading ? 0.5 : 1,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              flexShrink: 0,
+              position: 'relative'
+            }}
+            onMouseOver={(e) => {
+              if (!isLoading) {
+                e.target.style.background = isEditing ? '#218838' : '#0056b3';
+                e.target.style.transform = 'scale(1.1)';
+              }
+            }}
+            onMouseOut={(e) => {
+              e.target.style.background = isEditing ? '#28a745' : '#007bff';
+              e.target.style.transform = 'scale(1)';
+            }}
+          >
+            {isEditing ? '✓' : '✏️'}
+          </button>
+          
+          <button
+            onClick={() => onDelete(column.key)}
+            disabled={isLoading}
+            className="column-delete-btn"
+            title={isLoading ? "Đang xử lý..." : "Xóa cột"}
+            style={{
+              width: '28px',
+              height: '28px',
+              border: 'none',
+              borderRadius: '6px',
+              background: '#dc3545',
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              transition: 'all 0.2s ease',
+              opacity: isLoading ? 0.5 : 1,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              flexShrink: 0,
+              position: 'relative'
+            }}
+            onMouseOver={(e) => {
+              if (!isLoading) {
+                e.target.style.background = '#c82333';
+                e.target.style.transform = 'scale(1.1)';
+              }
+            }}
+            onMouseOut={(e) => {
+              e.target.style.background = '#dc3545';
+              e.target.style.transform = 'scale(1)';
+            }}
+          >
+            {isLoading ? "⏳" : "✕"}
+          </button>
+        </div>
       )}
     </th>
   );

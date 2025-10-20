@@ -34,6 +34,19 @@ export default function Office() {
     }
   };
 
+  // Handle column label editing
+  const handleEditColumn = (columnKey, newLabel) => {
+    const updatedColumns = columns.map(col => 
+      col.key === columnKey ? { ...col, label: newLabel } : col
+    );
+    setColumns(updatedColumns);
+    
+    // Save to localStorage as backup
+    localStorage.setItem(`column_config_office`, JSON.stringify({ columns: updatedColumns }));
+    
+    console.log(`✅ Column "${columnKey}" renamed to "${newLabel}"`);
+  };
+
   const [columns, setColumns] = useState([
     { key: "version", label: "Version", type: "text" },
     { key: "edition", label: "Edition", type: "text" },
@@ -374,6 +387,7 @@ export default function Office() {
                   key={col.key}
                   column={col}
                   onDelete={handleDeleteColumn}
+                  onEdit={handleEditColumn}
                   isAdmin={isAdmin}
                   isLoading={isLoading}
                 />

@@ -323,46 +323,249 @@ const UrlCell = ({ isAdmin, row, idx, type, handleChange, columnKey }) => {
 
   if (show === "32" && link32)
     return (
-      <a href={link32} target="_blank" rel="noreferrer">
-        32-bit
+      <a 
+        href={link32} 
+        target="_blank" 
+        rel="noreferrer"
+        style={{
+          color: "#007bff",
+          textDecoration: "none",
+          fontWeight: "600",
+          fontSize: "14px",
+          display: "inline-block",
+          padding: "8px 12px",
+          borderRadius: "6px",
+          background: "#f8f9fa",
+          border: "1px solid #dee2e6",
+          transition: "all 0.3s ease",
+          width: "120px",
+          height: "40px",
+          textAlign: "center",
+          lineHeight: "24px",
+          boxSizing: "border-box"
+        }}
+        onMouseOver={(e) => {
+          e.target.style.background = "#e9ecef";
+          e.target.style.color = "#0056b3";
+        }}
+        onMouseOut={(e) => {
+          e.target.style.background = "#f8f9fa";
+          e.target.style.color = "#007bff";
+        }}
+      >
+        🔗 32-bit
       </a>
     );
   if (show === "64" && link64)
     return (
-      <a href={link64} target="_blank" rel="noreferrer">
-        64-bit
+      <a 
+        href={link64} 
+        target="_blank" 
+        rel="noreferrer"
+        style={{
+          color: "#28a745",
+          textDecoration: "none",
+          fontWeight: "600",
+          fontSize: "14px",
+          display: "inline-block",
+          padding: "8px 12px",
+          borderRadius: "6px",
+          background: "#f8f9fa",
+          border: "1px solid #dee2e6",
+          transition: "all 0.3s ease",
+          width: "120px",
+          height: "40px",
+          textAlign: "center",
+          lineHeight: "24px",
+          boxSizing: "border-box"
+        }}
+        onMouseOver={(e) => {
+          e.target.style.background = "#e9ecef";
+          e.target.style.color = "#1e7e34";
+        }}
+        onMouseOut={(e) => {
+          e.target.style.background = "#f8f9fa";
+          e.target.style.color = "#28a745";
+        }}
+      >
+        🔗 64-bit
       </a>
     );
   if (show === "common" && linkCommon)
     return (
-      <a href={linkCommon} target="_blank" rel="noreferrer">
-        Download chung
+      <a 
+        href={linkCommon} 
+        target="_blank" 
+        rel="noreferrer"
+        style={{
+          color: "#6f42c1",
+          textDecoration: "none",
+          fontWeight: "600",
+          fontSize: "14px",
+          display: "inline-block",
+          padding: "8px 12px",
+          borderRadius: "6px",
+          background: "#f8f9fa",
+          border: "1px solid #dee2e6",
+          transition: "all 0.3s ease",
+          width: "120px",
+          height: "40px",
+          textAlign: "center",
+          lineHeight: "24px",
+          boxSizing: "border-box"
+        }}
+        onMouseOver={(e) => {
+          e.target.style.background = "#e9ecef";
+          e.target.style.color = "#5a2d91";
+        }}
+        onMouseOut={(e) => {
+          e.target.style.background = "#f8f9fa";
+          e.target.style.color = "#6f42c1";
+        }}
+      >
+        🔗 Common
       </a>
     );
   if (show === "both")
     return (
-      <div style={{ display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
         {link32 && (
-          <a href={link32} target="_blank" rel="noreferrer">
-            32-bit
+          <a 
+            href={link32} 
+            target="_blank" 
+            rel="noreferrer"
+            style={{
+              color: "#007bff",
+              textDecoration: "none",
+              fontWeight: "600",
+              fontSize: "14px",
+              display: "inline-block",
+              padding: "8px 12px",
+              borderRadius: "6px",
+              background: "#f8f9fa",
+              border: "1px solid #dee2e6",
+              transition: "all 0.3s ease",
+              width: "120px",
+              height: "40px",
+              textAlign: "center",
+              lineHeight: "24px",
+              boxSizing: "border-box"
+            }}
+            onMouseOver={(e) => {
+              e.target.style.background = "#e9ecef";
+              e.target.style.color = "#0056b3";
+            }}
+            onMouseOut={(e) => {
+              e.target.style.background = "#f8f9fa";
+              e.target.style.color = "#007bff";
+            }}
+          >
+            🔗 32-bit
           </a>
         )}
         {link64 && (
-          <a href={link64} target="_blank" rel="noreferrer">
-            64-bit
+          <a 
+            href={link64} 
+            target="_blank" 
+            rel="noreferrer"
+            style={{
+              color: "#28a745",
+              textDecoration: "none",
+              fontWeight: "600",
+              fontSize: "14px",
+              display: "inline-block",
+              padding: "8px 12px",
+              borderRadius: "6px",
+              background: "#f8f9fa",
+              border: "1px solid #dee2e6",
+              transition: "all 0.3s ease",
+              width: "120px",
+              height: "40px",
+              textAlign: "center",
+              lineHeight: "24px",
+              boxSizing: "border-box"
+            }}
+            onMouseOver={(e) => {
+              e.target.style.background = "#e9ecef";
+              e.target.style.color = "#1e7e34";
+            }}
+            onMouseOut={(e) => {
+              e.target.style.background = "#f8f9fa";
+              e.target.style.color = "#28a745";
+            }}
+          >
+            🔗 64-bit
           </a>
         )}
         {linkCommon && (
-          <a href={linkCommon} target="_blank" rel="noreferrer">
-            Download chung
+          <a 
+            href={linkCommon} 
+            target="_blank" 
+            rel="noreferrer"
+            style={{
+              color: "#6f42c1",
+              textDecoration: "none",
+              fontWeight: "600",
+              fontSize: "14px",
+              display: "inline-block",
+              padding: "8px 12px",
+              borderRadius: "6px",
+              background: "#f8f9fa",
+              border: "1px solid #dee2e6",
+              transition: "all 0.3s ease",
+              width: "120px",
+              height: "40px",
+              textAlign: "center",
+              lineHeight: "24px",
+              boxSizing: "border-box"
+            }}
+            onMouseOver={(e) => {
+              e.target.style.background = "#e9ecef";
+              e.target.style.color = "#5a2d91";
+            }}
+            onMouseOut={(e) => {
+              e.target.style.background = "#f8f9fa";
+              e.target.style.color = "#6f42c1";
+            }}
+          >
+            🔗 Common
           </a>
         )}
       </div>
     );
   if (linkCommon)
     return (
-      <a href={linkCommon} target="_blank" rel="noreferrer">
-        Download chung
+      <a 
+        href={linkCommon} 
+        target="_blank" 
+        rel="noreferrer"
+        style={{
+          color: "#6f42c1",
+          textDecoration: "none",
+          fontWeight: "600",
+          fontSize: "14px",
+          display: "inline-block",
+          padding: "8px 12px",
+          borderRadius: "6px",
+          background: "#f8f9fa",
+          border: "1px solid #dee2e6",
+          transition: "all 0.3s ease",
+          width: "120px",
+          height: "40px",
+          textAlign: "center",
+          lineHeight: "24px",
+          boxSizing: "border-box"
+        }}
+        onMouseOver={(e) => {
+          e.target.style.background = "#e9ecef";
+          e.target.style.color = "#5a2d91";
+        }}
+        onMouseOut={(e) => {
+          e.target.style.background = "#f8f9fa";
+          e.target.style.color = "#6f42c1";
+        }}
+      >
+        🔗 Common
       </a>
     );
   

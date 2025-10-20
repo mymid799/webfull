@@ -39,6 +39,19 @@ export default function FreeAntivirus() {
     }
   };
 
+  // Handle column label editing
+  const handleEditColumn = (columnKey, newLabel) => {
+    const updatedColumns = columns.map(col => 
+      col.key === columnKey ? { ...col, label: newLabel } : col
+    );
+    setColumns(updatedColumns);
+    
+    // Save to localStorage as backup
+    localStorage.setItem(`column_config_antivirus`, JSON.stringify({ columns: updatedColumns }));
+    
+    console.log(`✅ Column "${columnKey}" renamed to "${newLabel}"`);
+  };
+
   const [columns, setColumns] = useState([
     { key: "toolName", label: "Tên Tool", type: "text" },
     { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
@@ -106,18 +119,18 @@ export default function FreeAntivirus() {
               { key: "googleDrive", label: "Google", type: "url" },
               { key: "oneDrive", label: "OneDrive", type: "url" },
               { key: "note", label: "Note", type: "text" },
-            ]);
-          }
-        } catch (err) {
-          console.warn("⚠️ Error loading column config, using defaults:", err);
-          setColumns([
+          ]);
+        }
+      } catch (err) {
+        console.warn("⚠️ Error loading column config, using defaults:", err);
+        setColumns([
             { key: "toolName", label: "Tên Tool", type: "text" },
             { key: "mainLink", label: "Trang chủ / Link gốc", type: "url" },
             { key: "googleDrive", label: "Google", type: "url" },
             { key: "oneDrive", label: "OneDrive", type: "url" },
             { key: "note", label: "Note", type: "text" },
-          ]);
-        }
+        ]);
+      }
     };
 
     loadData();
@@ -132,7 +145,7 @@ export default function FreeAntivirus() {
   // Add new row function (align with Windows)
   const addRow = () => {
     const newRow = {};
-
+    
     columns.forEach(col => {
       if (col.type === 'url') {
         newRow[`${col.key}32`] = "";
@@ -142,7 +155,7 @@ export default function FreeAntivirus() {
         newRow[col.key] = "";
       }
     });
-
+    
     setData([...data, newRow]);
     setShowAddRowModal(false);
   };
@@ -172,7 +185,7 @@ export default function FreeAntivirus() {
         [`${newKey}Show`]: "both"
       }));
       setData(updatedData);
-    } else {
+      } else {
       // Nếu không phải URL, thêm trường thông thường
       const updatedData = data.map(row => ({
         ...row,
@@ -208,7 +221,7 @@ export default function FreeAntivirus() {
 
   // Save changes function
   const saveChanges = async () => {
-    const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token");
     if (!token) return alert("🔒 Bạn cần đăng nhập admin!");
 
     try {
@@ -228,7 +241,7 @@ export default function FreeAntivirus() {
           }
         }),
       });
-
+      
       const result = await res.json();
       console.log("💾 Save response (antivirus):", result);
       if (res.ok) {
@@ -250,8 +263,8 @@ export default function FreeAntivirus() {
   const handleChange = (idx, field, value) => {
     const newData = [...data];
     if (newData[idx]) {
-      newData[idx][field] = value;
-      setData(newData);
+    newData[idx][field] = value;
+    setData(newData);
     }
   };
 
@@ -437,6 +450,7 @@ export default function FreeAntivirus() {
                   key={col.key}
                   column={col}
                   onDelete={handleDeleteColumn}
+                  onEdit={handleEditColumn}
                   isAdmin={isAdmin}
                   isLoading={isLoading}
                 />
@@ -584,26 +598,26 @@ export default function FreeAntivirus() {
                 </tr>
               ) : (
                 <tr key={`antivirus-row-${idx}`}>
-                  {columns.map((col) => (
-                    <td key={col.key} style={tdStyle}>
-                      {col.type === 'url' ? (
+                {columns.map((col) => (
+                  <td key={col.key} style={tdStyle}>
+                    {col.type === 'url' ? (
                         <UrlCell
-                          isAdmin={isAdmin}
-                          row={row}
-                          idx={idx}
+                        isAdmin={isAdmin}
+                        row={row}
+                        idx={idx}
                           type={col.key}
-                          columnKey={col.key}
-                          handleChange={handleChange}
-                        />
-                      ) : (
-                        <EditableCell
-                          isAdmin={isAdmin}
-                          value={row[col.key]}
-                          onChange={(v) => handleChange(idx, col.key, v)}
-                        />
-                      )}
-                    </td>
-                  ))}
+                        columnKey={col.key}
+                        handleChange={handleChange}
+                      />
+                    ) : (
+                      <EditableCell
+                        isAdmin={isAdmin}
+                        value={row[col.key]}
+                        onChange={(v) => handleChange(idx, col.key, v)}
+                      />
+                    )}
+                  </td>
+                ))}
 
                   {isAdmin && (
                     <td className="action-cell">
